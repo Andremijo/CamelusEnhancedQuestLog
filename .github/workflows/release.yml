@@ -32,9 +32,33 @@ jobs:
             exit 1
           fi
           echo "TAG=v$version" >> "$GITHUB_ENV"
+          interface=$(sed -n 's/^## Interface: *//p' QuestLogCompletedMarker/QuestLogCompletedMarker.toc | tr -d '\r' | cut -d, -f1 | tr -d ' ')
+          echo "INTERFACE=$interface" >> "$GITHUB_ENV"
 
       - name: Build the zip
         run: zip -r "QuestLogCompletedMarker-$TAG.zip" QuestLogCompletedMarker
+
+      # release.json tells addon managers such as WoWUp which game client
+      # the zip is for ("forever" = WoW Forever), in the same format as the
+      # BigWigs packager.
+      - name: Write release.json
+        run: |
+          cat > release.json <<JSON
+          {
+            "releases": [
+              {
+                "name": "Quest Log Completed Marker",
+                "version": "$TAG",
+                "filename": "QuestLogCompletedMarker-$TAG.zip",
+                "nolib": false,
+                "metadata": [
+                  { "flavor": "forever", "interface": $INTERFACE }
+                ]
+              }
+            ]
+          }
+          JSON
+          python3 -m json.tool release.json
 
       - name: Create the release
         env:
@@ -54,7 +78,7 @@ jobs:
               on { print }
             ' CHANGELOG.md >> notes.md
           fi
-          gh release create "$TAG" "QuestLogCompletedMarker-$TAG.zip" \
+          gh release create "$TAG" "QuestLogCompletedMarker-$TAG.zip" release.json \
             --target "$GITHUB_SHA" \
             --title "Quest Log Completed Marker ${TAG#v}" \
             --notes-file notes.md

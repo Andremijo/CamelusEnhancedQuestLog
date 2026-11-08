@@ -17,6 +17,8 @@ The modern quest log only says "Ready for turn-in" in small text under a finishe
    `Interface\AddOns\QuestLogCompletedMarker\QuestLogCompletedMarker.toc`.
 3. Restart the game or type `/reload`, and make sure the addon is enabled on the character screen.
 
+**With WoWUp:** choose **Get Addons → Install from URL** and paste `https://github.com/Andremijo/QuestLogCompletedMarker`. WoWUp then installs and updates the addon from the releases.
+
 Upgrading from the old name (`QuestLogCompleted`, version 1.4.0 and earlier)? Delete the old `Interface\AddOns\QuestLogCompleted` folder.
 
 If the game says the addon is out of date after a client update, tick **Load out of date AddOns**.

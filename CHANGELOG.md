@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.5.1
+
+- Releases now include a `release.json`, so WoWUp can tell the addon is for WoW Forever and install it from the GitHub link without a warning.
+
 ## 1.5.0
 
 - Renamed to **Quest Log Completed Marker**. The addon folder is now `QuestLogCompletedMarker`.
