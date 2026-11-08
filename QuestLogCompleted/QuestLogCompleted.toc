@@ -1,0 +1,7 @@
+## Interface: 16001
+## Title: Quest Log Completed
+## Notes: Classic-style quest log: check mark and (Complete) on completed quests, [26D] for dungeon quests. Type /qlc for the options window.
+## Version: 1.4.0
+## SavedVariables: QuestLogCompletedDB
+
+QuestLogCompleted.lua
