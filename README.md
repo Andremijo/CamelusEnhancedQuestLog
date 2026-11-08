@@ -12,8 +12,8 @@ The modern quest log only says "Ready for turn-in" in small text under a finishe
 
 ## Installation
 
-1. Download the code: **Code → Download ZIP** on GitHub, or the latest release.
-2. Copy the `QuestLogCompleted` folder into your game's `Interface\AddOns\` folder, so that you have
+1. Download `QuestLogCompleted-vX.Y.Z.zip` from the [latest release](../../releases/latest).
+2. Unzip it into your game's `Interface\AddOns\` folder, so that you have
    `Interface\AddOns\QuestLogCompleted\QuestLogCompleted.toc`.
 3. Restart the game or type `/reload`, and make sure the addon is enabled on the character screen.
 
@@ -40,6 +40,13 @@ Settings are saved per account in `QuestLogCompletedDB`.
 ## How it works
 
 The addon doesn't replace the quest log. It finds the quest rows Blizzard draws and adds its own check mark and text on top of them. When a quest title would run into "(Complete)", it wraps the title onto the next line. Everything the addon adds is kept in its own tables rather than on Blizzard's frames, to avoid taint.
+
+## Making a new release
+
+1. Update `## Version:` in `QuestLogCompleted/QuestLogCompleted.toc` and add a section to `CHANGELOG.md`.
+2. Commit, then tag and push: `git tag v1.5.0 && git push origin main v1.5.0`.
+
+GitHub Actions then builds the zip and publishes the release (`.github/workflows/release.yml`).
 
 ## Reporting problems
 
