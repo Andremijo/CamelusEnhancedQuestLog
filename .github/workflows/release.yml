@@ -1,11 +1,15 @@
-# Publishes a GitHub release with a ready-to-install zip whenever a
-# version tag is pushed, e.g. `git tag v1.4.0 && git push origin v1.4.0`.
-# The tag must match "## Version:" in QuestLogCompleted.toc.
+# Publishes a GitHub release with a ready-to-install zip.
+# Two ways to start it:
+#   * Actions tab -> Release -> "Run workflow": the version is read from
+#     "## Version:" in QuestLogCompleted.toc and the tag (v1.4.0) is created.
+#   * Push a version tag, e.g. `git tag v1.4.0 && git push origin v1.4.0`.
+#     The tag must match "## Version:" in QuestLogCompleted.toc.
 name: Release
 
 on:
   push:
     tags: ["v*"]
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -16,35 +20,41 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check that the tag matches the addon version
+      - name: Work out the version
         run: |
           version=$(sed -n 's/^## Version: *//p' QuestLogCompleted/QuestLogCompleted.toc | tr -d '\r')
-          if [ "v$version" != "$GITHUB_REF_NAME" ]; then
+          if [ -z "$version" ]; then
+            echo "No '## Version:' line in QuestLogCompleted.toc"
+            exit 1
+          fi
+          if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "v$version" != "$GITHUB_REF_NAME" ]; then
             echo "Tag $GITHUB_REF_NAME does not match the .toc version $version"
             exit 1
           fi
+          echo "TAG=v$version" >> "$GITHUB_ENV"
 
       - name: Build the zip
-        run: zip -r "QuestLogCompleted-$GITHUB_REF_NAME.zip" QuestLogCompleted
+        run: zip -r "QuestLogCompleted-$TAG.zip" QuestLogCompleted
 
       - name: Create the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           cat > notes.md <<NOTES
-          Download **QuestLogCompleted-$GITHUB_REF_NAME.zip** below and unzip it into your game's \`Interface\\AddOns\\\` folder, so that you get \`Interface\\AddOns\\QuestLogCompleted\\QuestLogCompleted.toc\`. Then restart the game or type \`/reload\`.
+          Download **QuestLogCompleted-$TAG.zip** below and unzip it into your game's \`Interface\\AddOns\\\` folder, so that you get \`Interface\\AddOns\\QuestLogCompleted\\QuestLogCompleted.toc\`. Then restart the game or type \`/reload\`.
 
           Type \`/qlc\` in game to open the options. See the [README](https://github.com/$GITHUB_REPOSITORY#readme) for all features and commands.
           NOTES
           if [ -f CHANGELOG.md ]; then
             echo "" >> notes.md
             echo "## Changes" >> notes.md
-            awk -v v="${GITHUB_REF_NAME#v}" '
+            awk -v v="${TAG#v}" '
               $0 ~ "^## " v "( |$)" { on = 1; next }
               /^## / && on { exit }
               on { print }
             ' CHANGELOG.md >> notes.md
           fi
-          gh release create "$GITHUB_REF_NAME" "QuestLogCompleted-$GITHUB_REF_NAME.zip" \
-            --title "Quest Log Completed ${GITHUB_REF_NAME#v}" \
+          gh release create "$TAG" "QuestLogCompleted-$TAG.zip" \
+            --target "$GITHUB_SHA" \
+            --title "Quest Log Completed ${TAG#v}" \
             --notes-file notes.md

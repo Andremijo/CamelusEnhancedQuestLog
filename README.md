@@ -44,9 +44,10 @@ The addon doesn't replace the quest log. It finds the quest rows Blizzard draws 
 ## Making a new release
 
 1. Update `## Version:` in `QuestLogCompleted/QuestLogCompleted.toc` and add a section to `CHANGELOG.md`.
-2. Commit, then tag and push: `git tag v1.5.0 && git push origin main v1.5.0`.
+2. Commit and push to `main`.
+3. On GitHub, open **Actions → Release → Run workflow**. (Or push a tag instead: `git tag v1.5.0 && git push origin v1.5.0`.)
 
-GitHub Actions then builds the zip and publishes the release (`.github/workflows/release.yml`).
+GitHub Actions then creates the tag, builds the zip and publishes the release (`.github/workflows/release.yml`).
 
 ## Reporting problems
 
