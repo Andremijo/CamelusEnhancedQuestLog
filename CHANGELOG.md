@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.0
+
+- Renamed to **Quest Log Completed Marker**. The addon folder is now `QuestLogCompletedMarker`.
+- If you had the old `QuestLogCompleted` folder installed, delete it. The addon warns in chat if both are installed.
+- Settings start from the defaults again after the rename.
+
 ## 1.4.0
 
 First public release.

@@ -1,4 +1,4 @@
-# Quest Log Completed
+# Quest Log Completed Marker
 
 A small World of Warcraft addon for **WoW Forever** (client 1.60, Interface 16001) that brings classic-style quest log markers to the modern quest log.
 
@@ -12,16 +12,18 @@ The modern quest log only says "Ready for turn-in" in small text under a finishe
 
 ## Installation
 
-1. Download `QuestLogCompleted-vX.Y.Z.zip` from the [latest release](../../releases/latest).
+1. Download `QuestLogCompletedMarker-vX.Y.Z.zip` from the [latest release](../../releases/latest).
 2. Unzip it into your game's `Interface\AddOns\` folder, so that you have
-   `Interface\AddOns\QuestLogCompleted\QuestLogCompleted.toc`.
+   `Interface\AddOns\QuestLogCompletedMarker\QuestLogCompletedMarker.toc`.
 3. Restart the game or type `/reload`, and make sure the addon is enabled on the character screen.
+
+Upgrading from the old name (`QuestLogCompleted`, version 1.4.0 and earlier)? Delete the old `Interface\AddOns\QuestLogCompleted` folder.
 
 If the game says the addon is out of date after a client update, tick **Load out of date AddOns**.
 
 ## Options
 
-Type `/qlc` to open the options window. The same page is also under **Options → AddOns → Quest Log Completed**.
+Type `/qlc` to open the options window. The same page is also under **Options → AddOns → Quest Log Completed Marker**.
 
 | Command | What it does |
 | --- | --- |
@@ -35,7 +37,7 @@ Type `/qlc` to open the options window. The same page is also under **Options �
 | `/qlc debug` | Print troubleshooting information (open the quest log first) |
 | `/qlc help` | List the commands |
 
-Settings are saved per account in `QuestLogCompletedDB`.
+Settings are saved per account in `QuestLogCompletedMarkerDB`.
 
 ## How it works
 
@@ -43,7 +45,7 @@ The addon doesn't replace the quest log. It finds the quest rows Blizzard draws 
 
 ## Making a new release
 
-1. Update `## Version:` in `QuestLogCompleted/QuestLogCompleted.toc` and add a section to `CHANGELOG.md`.
+1. Update `## Version:` in `QuestLogCompletedMarker/QuestLogCompletedMarker.toc` and add a section to `CHANGELOG.md`.
 2. Commit and push to `main`.
 3. On GitHub, open **Actions → Release → Run workflow**. (Or push a tag instead: `git tag v1.5.0 && git push origin v1.5.0`.)
 

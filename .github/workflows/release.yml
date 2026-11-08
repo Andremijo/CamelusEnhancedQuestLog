@@ -1,9 +1,9 @@
 # Publishes a GitHub release with a ready-to-install zip.
 # Two ways to start it:
 #   * Actions tab -> Release -> "Run workflow": the version is read from
-#     "## Version:" in QuestLogCompleted.toc and the tag (v1.4.0) is created.
+#     "## Version:" in QuestLogCompletedMarker.toc and the tag (v1.4.0) is created.
 #   * Push a version tag, e.g. `git tag v1.4.0 && git push origin v1.4.0`.
-#     The tag must match "## Version:" in QuestLogCompleted.toc.
+#     The tag must match "## Version:" in QuestLogCompletedMarker.toc.
 name: Release
 
 on:
@@ -22,9 +22,9 @@ jobs:
 
       - name: Work out the version
         run: |
-          version=$(sed -n 's/^## Version: *//p' QuestLogCompleted/QuestLogCompleted.toc | tr -d '\r')
+          version=$(sed -n 's/^## Version: *//p' QuestLogCompletedMarker/QuestLogCompletedMarker.toc | tr -d '\r')
           if [ -z "$version" ]; then
-            echo "No '## Version:' line in QuestLogCompleted.toc"
+            echo "No '## Version:' line in QuestLogCompletedMarker.toc"
             exit 1
           fi
           if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "v$version" != "$GITHUB_REF_NAME" ]; then
@@ -34,14 +34,14 @@ jobs:
           echo "TAG=v$version" >> "$GITHUB_ENV"
 
       - name: Build the zip
-        run: zip -r "QuestLogCompleted-$TAG.zip" QuestLogCompleted
+        run: zip -r "QuestLogCompletedMarker-$TAG.zip" QuestLogCompletedMarker
 
       - name: Create the release
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
           cat > notes.md <<NOTES
-          Download **QuestLogCompleted-$TAG.zip** below and unzip it into your game's \`Interface\\AddOns\\\` folder, so that you get \`Interface\\AddOns\\QuestLogCompleted\\QuestLogCompleted.toc\`. Then restart the game or type \`/reload\`.
+          Download **QuestLogCompletedMarker-$TAG.zip** below and unzip it into your game's \`Interface\\AddOns\\\` folder, so that you get \`Interface\\AddOns\\QuestLogCompletedMarker\\QuestLogCompletedMarker.toc\`. Then restart the game or type \`/reload\`.
 
           Type \`/qlc\` in game to open the options. See the [README](https://github.com/$GITHUB_REPOSITORY#readme) for all features and commands.
           NOTES
@@ -54,7 +54,7 @@ jobs:
               on { print }
             ' CHANGELOG.md >> notes.md
           fi
-          gh release create "$TAG" "QuestLogCompleted-$TAG.zip" \
+          gh release create "$TAG" "QuestLogCompletedMarker-$TAG.zip" \
             --target "$GITHUB_SHA" \
-            --title "Quest Log Completed ${TAG#v}" \
+            --title "Quest Log Completed Marker ${TAG#v}" \
             --notes-file notes.md

@@ -1,4 +1,4 @@
--- Quest Log Completed
+-- Quest Log Completed Marker
 -- Classic-style touches for the modern quest log:
 --   * a green check mark to the left of completed quests
 --   * "(Complete)" / "(Failed)" in the tag column, where "(Dungeon)" is shown
@@ -17,6 +17,8 @@
 --   /qlc color    toggle (Complete) colour: green or the quest's own colour
 --                 (or /qlc color green, /qlc color quest)
 --   /qlc debug    print what the addon finds (open the quest log first)
+
+local ADDON_NAME = ...
 
 ------------------------------------------------------------------------
 -- Easy-to-change settings
@@ -45,7 +47,7 @@ local ownRegions = setmetatable({}, { __mode = "k" }) -- set of regions we creat
 local learnedTag -- where Blizzard puts its tag, learned from a row that has one
 
 local function Print(msg)
-    print("|cff40ff40QuestLogCompleted:|r " .. msg)
+    print("|cff40ff40Quest Log Completed Marker:|r " .. msg)
 end
 
 local function SafeCall(fn, ...)
@@ -418,9 +420,9 @@ frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("QUEST_LOG_UPDATE")
 frame:SetScript("OnEvent", function(_, event, name)
-    if event == "ADDON_LOADED" and name == "QuestLogCompleted" then
-        QuestLogCompletedDB = QuestLogCompletedDB or {}
-        db = QuestLogCompletedDB
+    if event == "ADDON_LOADED" and name == ADDON_NAME then
+        QuestLogCompletedMarkerDB = QuestLogCompletedMarkerDB or {}
+        db = QuestLogCompletedMarkerDB
         if not MODES[db.mode] then
             -- Settings from version 1.0 (separate check/text switches)
             if db.check == false and db.text == false then db.mode = "off"
@@ -592,7 +594,7 @@ local function BuildOptions(parent, top, withTitle)
     if withTitle then
         local title = parent:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
         title:SetPoint("TOPLEFT", x, y)
-        title:SetText("Quest Log Completed")
+        title:SetText("Quest Log Completed Marker")
         y = y - 32
     end
 
@@ -666,7 +668,7 @@ local function CreateOptionsWindow()
     local top = -32
     local hasTitleBar = template == "BasicFrameTemplateWithInset" and w.TitleText ~= nil
     if hasTitleBar then
-        w.TitleText:SetText("Quest Log Completed")
+        w.TitleText:SetText("Quest Log Completed Marker")
     elseif template ~= "BasicFrameTemplateWithInset" and w.SetBackdrop then
         -- Older look if the modern window template is missing
         w:SetBackdrop({
@@ -684,8 +686,8 @@ local function CreateOptionsWindow()
     w:Hide()
 
     -- Close with Escape
-    _G.QuestLogCompletedOptionsWindow = w
-    tinsert(UISpecialFrames, "QuestLogCompletedOptionsWindow")
+    _G.QuestLogCompletedMarkerOptionsWindow = w
+    tinsert(UISpecialFrames, "QuestLogCompletedMarkerOptionsWindow")
     return w
 end
 
@@ -697,7 +699,7 @@ end
 -- Page under Options -> AddOns (modern menu) or Interface -> AddOns (old menu)
 local function RegisterSettingsPage()
     local panel = CreateFrame("Frame")
-    panel.name = "Quest Log Completed"
+    panel.name = "Quest Log Completed Marker"
     BuildOptions(panel, -16, true)
 
     local openButton = CreateFromTemplates("Button", panel, "UIPanelButtonTemplate")
@@ -722,6 +724,13 @@ end
 local optionsLoader = CreateFrame("Frame")
 optionsLoader:RegisterEvent("PLAYER_LOGIN")
 optionsLoader:SetScript("OnEvent", function()
+    -- The addon used to be called "QuestLogCompleted". If that old folder is
+    -- still installed, both would draw on the quest log.
+    local isLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or IsAddOnLoaded
+    if isLoaded and isLoaded("QuestLogCompleted") then
+        Print("|cffff4040the old \"QuestLogCompleted\" addon is also installed.|r "
+            .. "Delete the Interface\\AddOns\\QuestLogCompleted folder, it has been replaced by this one.")
+    end
     local ok, err = pcall(RegisterSettingsPage)
     if not ok then Print("could not add the page under Options -> AddOns (" .. tostring(err) .. "). /qlc still works.") end
 end)
@@ -729,8 +738,8 @@ end)
 ------------------------------------------------------------------------
 -- Slash command
 ------------------------------------------------------------------------
-SLASH_QUESTLOGCOMPLETED1 = "/qlc"
-SlashCmdList.QUESTLOGCOMPLETED = function(msg)
+SLASH_QUESTLOGCOMPLETEDMARKER1 = "/qlc"
+SlashCmdList.QUESTLOGCOMPLETEDMARKER = function(msg)
     msg = (msg or ""):lower():match("^%s*(.-)%s*$")
     if msg == "" or msg == "options" or msg == "config" then
         OpenOptions()
