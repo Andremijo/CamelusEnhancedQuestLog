@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.1
+
+- The options window and the Options → AddOns page show the addon version in the bottom right corner.
+
 ## 1.6.0
 
 - New: "Quests completed: 5/34" under "Quests: 34/40" at the top of the quest log. The box grows to two lines, and the quest list moves down a little to make room. Turn it off in the options or with `/qlc count`.

@@ -693,6 +693,13 @@ local function AddLabel(button, text)
 end
 
 -- Builds all controls inside `parent`. top = y offset of the first line.
+-- The version from the .toc file, e.g. "1.6.1".
+local function GetVersion()
+    local getMetadata = (C_AddOns and C_AddOns.GetAddOnMetadata) or GetAddOnMetadata
+    local version = getMetadata and SafeCall(getMetadata, ADDON_NAME, "Version")
+    return type(version) == "string" and version ~= "" and version or nil
+end
+
 local function BuildOptions(parent, top, withTitle)
     local x, y = 16, top
     local function Header(text, gap)
@@ -782,6 +789,14 @@ local function BuildOptions(parent, top, withTitle)
             pTag:SetTextColor(1, 0.5, 0.25)
         end
     end
+    -- Version in the bottom right corner, small and grey.
+    local version = GetVersion()
+    if version then
+        local versionText = parent:CreateFontString(nil, "ARTWORK", "GameFontDisableSmall")
+        versionText:SetPoint("BOTTOMRIGHT", -14, 12)
+        versionText:SetText("Version " .. version)
+    end
+
     parent:HookScript("OnShow", SyncControls)
     return -y
 end
@@ -815,7 +830,7 @@ local function CreateOptionsWindow()
         top = -18
     end
     local height = BuildOptions(w, top, not hasTitleBar)
-    w:SetHeight(height + 46)
+    w:SetHeight(height + 58) -- room for the preview row and the version line
     w:Hide()
 
     -- Close with Escape
