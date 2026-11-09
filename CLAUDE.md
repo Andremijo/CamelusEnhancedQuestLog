@@ -2,10 +2,10 @@
 
 World of Warcraft addon for **WoW Forever** that brings classic-style quest log markers to the modern quest log. Repo: https://github.com/Andremijo/QuestLogCompletedMarker
 
-## About the owner
-- Not a programmer. Explain things in plain language and say what a change means in practice.
-- Writes in English or Swedish. Reply in the language of their latest message.
-- They test in the game and send screenshots. You cannot run WoW, so say plainly what has and hasn't been tested.
+## Working on this project
+- Explain changes in plain, non-technical language and say what they mean in practice.
+- Reply in the language of the latest message (English or Swedish).
+- Testing happens in the game, with screenshots as feedback. You cannot run WoW, so say plainly what has and hasn't been tested.
 
 ## The client
 - WoW Forever, client 1.60.x, **Interface 16001**. Its UI is the retail ("Mainline") UI with overrides. Internally the game type is `camelot`, and addon managers call it `forever`.
