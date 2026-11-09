@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.6.0
+
+- New: "Quests completed: 5/34" under "Quests: 34/40" at the top of the quest log. The box grows to two lines, and the quest list moves down a little to make room. Turn it off in the options or with `/qlc count`.
+
 ## 1.5.1
 
 - Releases now include a `release.json`, so WoWUp can tell the addon is for WoW Forever and install it from the GitHub link without a warning.

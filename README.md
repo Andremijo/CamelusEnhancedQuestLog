@@ -8,6 +8,7 @@ The modern quest log only says "Ready for turn-in" in small text under a finishe
 - **(Complete)** shown in the tag column, where "(Dungeon)" usually appears, like the classic quest log. Failed quests show **(Failed)**.
 - **Level letter** after the quest level: `[26D]` for dungeon quests and `[40R]` for raid quests.
 - **Colour choice** for (Complete): green (default) or the same colour as the quest title.
+- **Completed count**: "Quests completed: 5/34" under "Quests: 34/40" at the top of the quest log.
 - **Options window** with a live preview.
 
 ## Installation
@@ -35,6 +36,7 @@ Type `/qlc` to open the options window. The same page is also under **Options â†
 | `/qlc text` | Show only (Complete) |
 | `/qlc off` | Show neither |
 | `/qlc level` | Turn the D/R letter after the level on or off |
+| `/qlc count` | Turn "Quests completed: 5/34" under the quest count on or off |
 | `/qlc color` | Switch the (Complete) colour between green and the quest's colour (`/qlc color green`, `/qlc color quest`) |
 | `/qlc debug` | Print troubleshooting information (open the quest log first) |
 | `/qlc help` | List the commands |

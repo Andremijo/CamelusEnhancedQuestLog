@@ -14,6 +14,7 @@
 --   /qlc text     only the (Complete) text
 --   /qlc off      neither
 --   /qlc level    toggle the D/R letter after the quest level
+--   /qlc count    toggle "Quests completed: 5/34" under "Quests: 34/40"
 --   /qlc color    toggle (Complete) colour: green or the quest's own colour
 --                 (or /qlc color green, /qlc color quest)
 --   /qlc debug    print what the addon finds (open the quest log first)
@@ -31,6 +32,8 @@ local CHECK_SIZE    = 14
 -- Quest tag IDs -> letter after the level. 81 = Dungeon, 62/88/89 = Raid.
 local LEVEL_LETTERS = { [81] = "D", [62] = "R", [88] = "R", [89] = "R" }
 local TAG_GAP       = 6    -- minimum space between the title and (Complete)
+local COUNT_LABEL   = "Quests completed:"
+local COUNT_EXTRA   = 14   -- how much taller the "Quests: 34/40" box gets
 local MAX_DEPTH     = 4    -- how deep to look for quest title rows
 local POLL_INTERVAL = 0.3  -- seconds between re-checks while the quest log is open
 
@@ -381,11 +384,120 @@ local function Decorate(button)
     end
 end
 
+------------------------------------------------------------------------
+-- "Quests completed: 5/34" under "Quests: 34/40"
+--
+-- In WoW Forever the count sits in a 20 pixel high box (QuestLogCount)
+-- right of the search box, with the quest list starting just below. To fit
+-- a second line, the box grows downwards by COUNT_EXTRA and the list moves
+-- down by the same amount. The search box keeps its place.
+------------------------------------------------------------------------
+local countLine          -- our FontString under Blizzard's count
+local countLayout = false
+local searchBaseWidth    -- search box width as Blizzard last set it
+local countBaseWidth     -- the count box's own width
+
+local function ShiftPoint(region, point, dy)
+    for i = 1, region:GetNumPoints() do
+        local p, rel, relPoint, x, y = region:GetPoint(i)
+        if p == point then
+            region:SetPoint(p, rel, relPoint, x, (y or 0) + dy)
+            return true
+        end
+    end
+    return false
+end
+
+-- Makes room for the second line (on = true) or puts everything back.
+local function SetCountLayout(on)
+    if countLayout == on then return true end
+    if InCombatLockdown and InCombatLockdown() then return false end -- retried after combat
+    local sf, box = QuestScrollFrame, QuestLogCount
+    local sb = sf and sf.SearchBox
+    if not (sf and box and sb) then return false end
+    local d = on and COUNT_EXTRA or -COUNT_EXTRA
+    if not ShiftPoint(sf, "TOPLEFT", -d) then return false end -- list down
+    ShiftPoint(sb, "BOTTOMLEFT", d)                            -- search box stays put
+    box:SetHeight(box:GetHeight() + d)                         -- box grows downwards
+    for _, key in ipairs({ "Left", "Middle", "Right" }) do
+        local t = box[key]
+        if t and t.SetHeight then t:SetHeight(t:GetHeight() + d) end
+    end
+    countLayout = on
+    return true
+end
+
+local function CountCompleted()
+    local api = C_QuestLog
+    if not (api and api.GetNumQuestLogEntries and api.GetInfo) then return nil end
+    local numEntries, numQuests = api.GetNumQuestLogEntries()
+    local done, total = 0, 0
+    for i = 1, numEntries or 0 do
+        local info = api.GetInfo(i)
+        if info and not info.isHeader and not info.isHidden and not info.isTask and not info.isBounty then
+            total = total + 1
+            if QuestStatus(info.questID, i) == "complete" then done = done + 1 end
+        end
+    end
+    return done, numQuests or total
+end
+
+-- Same style as Blizzard's "Quests: 34/40" (white first number).
+local function CountText(done, total)
+    local numbers
+    local template = type(QUEST_LOG_COUNT_TEMPLATE) == "string" and QUEST_LOG_COUNT_TEMPLATE
+    local body = template and template:match("^[^%%]*(%%.*)$")
+    if body then
+        local ok, result = pcall(string.format, body, "|cffffffff", done, total)
+        if ok then numbers = result end
+    end
+    numbers = numbers or ("|cffffffff%d|r/%d"):format(done, total)
+    return COUNT_LABEL .. " " .. numbers
+end
+
+local function UpdateCompletedCount()
+    if not db then return end
+    local box, cf = QuestLogCount, QuestLogQuestCount
+    local sb = QuestScrollFrame and QuestScrollFrame.SearchBox
+    if not (box and cf and sb) then return end
+
+    local done, total
+    if db.showCount then done, total = CountCompleted() end
+    local show = done ~= nil and SetCountLayout(true)
+
+    if not show then
+        if countLine then countLine:Hide() end
+        if countBaseWidth then box:SetWidth(countBaseWidth) end
+        if searchBaseWidth then sb:SetWidth(searchBaseWidth) end
+        if not db.showCount then SetCountLayout(false) end
+        return
+    end
+
+    if not countLine then
+        countLine = box:CreateFontString(nil, "ARTWORK", "GameFontNormalSmall")
+        countLine:SetJustifyH("RIGHT")
+        countLine:SetPoint("TOPRIGHT", cf, "BOTTOMRIGHT", 0, -3)
+    end
+    CopyFont(countLine, cf)
+    countLine:SetText(CountText(done, total))
+    countLine:Show()
+
+    -- Widen the box to fit the longer text and shorten the search box by
+    -- the same amount, so the row keeps its width.
+    countBaseWidth = countBaseWidth or box:GetWidth()
+    searchBaseWidth = searchBaseWidth or sb:GetWidth()
+    local need = math.max(cf:GetStringWidth() or 0, countLine:GetStringWidth() or 0) + 14
+    local boxWidth = math.max(countBaseWidth, math.ceil(need))
+    box:SetWidth(boxWidth)
+    sb:SetWidth(math.max(80, searchBaseWidth - (boxWidth - countBaseWidth)))
+end
+
 local function Refresh()
     if not db then return end
     for _, root in ipairs(GetRoots()) do
         if root:IsVisible() then Scan(root, 0, Decorate) end
     end
+    if QuestLogCount and QuestLogCount:IsVisible() then UpdateCompletedCount() end
 end
 
 ------------------------------------------------------------------------
@@ -396,6 +508,16 @@ local function TryInstallHooks()
     if not hooked.update and type(QuestLogQuests_Update) == "function" then
         hooksecurefunc("QuestLogQuests_Update", Refresh)
         hooked.update = true
+    end
+    if not hooked.count and type(QuestLogQuests_ShowQuestCount) == "function" then
+        -- Blizzard sets the search box width here on every update, so this
+        -- is the moment to read it and then adjust it.
+        hooksecurefunc("QuestLogQuests_ShowQuestCount", function()
+            local sb = QuestScrollFrame and QuestScrollFrame.SearchBox
+            if sb then searchBaseWidth = sb:GetWidth() end
+            UpdateCompletedCount()
+        end)
+        hooked.count = true
     end
     if not hooked.show and QuestScrollFrame and QuestScrollFrame.HookScript then
         QuestScrollFrame:HookScript("OnShow", function() C_Timer.After(0, Refresh) end)
@@ -419,6 +541,7 @@ local frame = CreateFrame("Frame")
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_LOGIN")
 frame:RegisterEvent("QUEST_LOG_UPDATE")
+frame:RegisterEvent("PLAYER_REGEN_ENABLED") -- finish layout changes that waited for combat to end
 frame:SetScript("OnEvent", function(_, event, name)
     if event == "ADDON_LOADED" and name == ADDON_NAME then
         QuestLogCompletedMarkerDB = QuestLogCompletedMarkerDB or {}
@@ -432,6 +555,7 @@ frame:SetScript("OnEvent", function(_, event, name)
         end
         db.check, db.text = nil, nil
         if db.level == nil then db.level = true end
+        if db.showCount == nil then db.showCount = true end
         if db.color ~= "green" and db.color ~= "quest" then db.color = "green" end
     end
     if event == "ADDON_LOADED" or event == "PLAYER_LOGIN" then
@@ -495,6 +619,10 @@ local function Debug()
         .. ", QuestScrollFrame: " .. (QuestScrollFrame and "found" or "NOT found"))
     Print("C_QuestLog.IsComplete: " .. ((C_QuestLog and C_QuestLog.IsComplete) and "found" or "NOT found")
         .. ", tag info: " .. (((C_QuestLog and C_QuestLog.GetQuestTagInfo) or GetQuestTagInfo) and "found" or "NOT found"))
+    Print("QuestLogCount: " .. (QuestLogCount and "found" or "NOT found")
+        .. ", QuestLogQuestCount: " .. (QuestLogQuestCount and "found" or "NOT found")
+        .. ", ShowQuestCount: " .. (type(QuestLogQuests_ShowQuestCount) == "function" and "found" or "NOT found")
+        .. ", layout " .. (countLayout and "applied" or "not applied"))
     local count, withTag, completeNoTag = 0, nil, nil
     for _, root in ipairs(GetRoots()) do
         Scan(root, 0, function(b)
@@ -614,6 +742,10 @@ local function BuildOptions(parent, top, withTitle)
     local level = Button("check", "Add D for dungeon and R for raid quests, e.g. [26D]",
         function(b) db.level = b:GetChecked() and true or false; SettingsChanged() end)
 
+    Header("Quest count", 8)
+    local countBox = Button("check", "Show \"Quests completed: 5/34\" under \"Quests: 34/40\"",
+        function(b) db.showCount = b:GetChecked() and true or false; SettingsChanged() end)
+
     -- Preview of a completed dungeon quest with the current settings
     Header("Preview", 8)
     local row = CreateFrame("Frame", nil, parent)
@@ -637,6 +769,7 @@ local function BuildOptions(parent, top, withTitle)
         green:SetChecked(db.color == "green")
         quest:SetChecked(db.color == "quest")
         level:SetChecked(db.level)
+        countBox:SetChecked(db.showCount)
 
         if ShowsCheck() then pCheck:Show() else pCheck:Hide() end
         pTitle:SetText(db.level and "[27D] The Day After" or "[27] The Day After")
@@ -748,6 +881,8 @@ SlashCmdList.QUESTLOGCOMPLETEDMARKER = function(msg)
         db.mode = msg
     elseif msg == "level" then
         db.level = not db.level
+    elseif msg == "count" then
+        db.showCount = not db.showCount
     elseif msg == "color" or msg == "colour" then
         db.color = (db.color == "green") and "quest" or "green"
     elseif msg == "color green" or msg == "colour green" then
@@ -761,11 +896,13 @@ SlashCmdList.QUESTLOGCOMPLETEDMARKER = function(msg)
         Print("/qlc  - open the options window")
         Print("/qlc both | check | text | off  - what to show on completed quests")
         Print("/qlc level  - toggle D/R after the level, e.g. [26D]")
+        Print("/qlc count  - toggle \"Quests completed\" under the quest count")
         Print("/qlc color  - (Complete) in green or in the quest's colour (/qlc color green | quest)")
         Print("/qlc debug  - troubleshooting info")
     end
     Print("showing: " .. MODE_NAMES[db.mode] .. "; level letter " ..
         (db.level and "|cff40ff40on|r" or "|cffff4040off|r") ..
+        "; completed count " .. (db.showCount and "|cff40ff40on|r" or "|cffff4040off|r") ..
         "; (Complete) colour: " .. (db.color == "green" and "|cff40ff40green|r" or "quest colour"))
     SettingsChanged()
 end
