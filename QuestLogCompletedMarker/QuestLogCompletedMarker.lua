@@ -391,21 +391,43 @@ end
 -- right of the search box, with the quest list starting just below. To fit
 -- a second line, the box grows downwards by COUNT_EXTRA and the list moves
 -- down by the same amount. The search box keeps its place.
+--
+-- Some map addons hide that box and show their own count instead, e.g.
+-- Leatrix Maps' "Use simple map frame" shows "17/40" in its title bar. Then
+-- the layout is left alone and " · 5 completed" is added after their count.
 ------------------------------------------------------------------------
 local countLine          -- our FontString under Blizzard's count
 local countLayout = false
 local searchBaseWidth    -- search box width as Blizzard last set it
 local countBaseWidth     -- the count box's own width
+local shiftedPoints = {} -- region -> the anchor we set, so we only undo our own change
 
 local function ShiftPoint(region, point, dy)
     for i = 1, region:GetNumPoints() do
         local p, rel, relPoint, x, y = region:GetPoint(i)
         if p == point then
             region:SetPoint(p, rel, relPoint, x, (y or 0) + dy)
+            shiftedPoints[region] = { point = p, rel = rel, relPoint = relPoint, y = (y or 0) + dy }
             return true
         end
     end
     return false
+end
+
+-- Undoes ShiftPoint, but only if nobody (e.g. a map addon) has re-anchored
+-- the region since. Otherwise their position is left alone.
+local function UnshiftPoint(region, dy)
+    local rec = shiftedPoints[region]
+    shiftedPoints[region] = nil
+    if not rec then return end
+    for i = 1, region:GetNumPoints() do
+        local p, rel, relPoint, x, y = region:GetPoint(i)
+        if p == rec.point and rel == rec.rel and relPoint == rec.relPoint
+            and math.abs((y or 0) - rec.y) < 0.01 then
+            region:SetPoint(p, rel, relPoint, x, (y or 0) - dy)
+            return
+        end
+    end
 end
 
 -- Makes room for the second line (on = true) or puts everything back.
@@ -415,10 +437,15 @@ local function SetCountLayout(on)
     local sf, box = QuestScrollFrame, QuestLogCount
     local sb = sf and sf.SearchBox
     if not (sf and box and sb) then return false end
+    if on then
+        if not ShiftPoint(sf, "TOPLEFT", -COUNT_EXTRA) then return false end -- list down
+        ShiftPoint(sb, "BOTTOMLEFT", COUNT_EXTRA)                            -- search box stays put
+    else
+        UnshiftPoint(sf, -COUNT_EXTRA)
+        UnshiftPoint(sb, COUNT_EXTRA)
+    end
     local d = on and COUNT_EXTRA or -COUNT_EXTRA
-    if not ShiftPoint(sf, "TOPLEFT", -d) then return false end -- list down
-    ShiftPoint(sb, "BOTTOMLEFT", d)                            -- search box stays put
-    box:SetHeight(box:GetHeight() + d)                         -- box grows downwards
+    box:SetHeight(box:GetHeight() + d) -- box grows downwards
     for _, key in ipairs({ "Left", "Middle", "Right" }) do
         local t = box[key]
         if t and t.SetHeight then t:SetHeight(t:GetHeight() + d) end
@@ -455,21 +482,110 @@ local function CountText(done, total)
     return COUNT_LABEL .. " " .. numbers
 end
 
+-- Is Blizzard's own "Quests: 34/40" box in use? Map addons such as
+-- Leatrix Maps hide it (Hide and/or alpha 0). IsShown, not IsVisible, so a
+-- collapsed quest log panel doesn't count as "taken over".
+local function BlizzardCountBoxInUse()
+    local box = QuestLogCount
+    return box ~= nil and box:IsShown() and box:GetAlpha() > 0.01
+end
+
+------------------------------------------------------------------------
+-- Another addon's quest count, e.g. Leatrix Maps' "17/40"
+------------------------------------------------------------------------
+local foreignCount  -- their FontString
+local foreignSuffix -- the text we added after their count
+
+-- "17/40" as the game counts it, or nil.
+local function QuestCountString()
+    local api = C_QuestLog
+    local consts = Constants and Constants.QuestLogConsts
+    local max = consts and consts.MAXIMUM_NUM_QUESTS_LOG_CAN_ACCEPT
+    if not (api and api.GetNumQuestLogEntries and max) then return nil end
+    local _, numQuests = api.GetNumQuestLogEntries()
+    if not numQuests then return nil end
+    return numQuests .. "/" .. max
+end
+
+-- Text of a FontString without the suffix we added. Returns plain, raw.
+local function TextWithoutSuffix(fs)
+    local text = fs:GetText() or ""
+    if fs == foreignCount and foreignSuffix and #text >= #foreignSuffix
+        and text:sub(-#foreignSuffix) == foreignSuffix then
+        text = text:sub(1, #text - #foreignSuffix)
+    end
+    return StripColors(text), text
+end
+
+-- Looks for a visible FontString on the world map that shows exactly the
+-- quest count ("17/40"). The map itself (ScrollContainer) is skipped.
+local function FindForeignCount(want)
+    if not want then return nil end
+    if foreignCount and foreignCount:IsVisible() and TextWithoutSuffix(foreignCount) == want then
+        return foreignCount
+    end
+    local map = WorldMapFrame
+    if not (map and map:IsVisible()) then return nil end
+    local found
+    local function search(frame, depth)
+        if found or frame == map.ScrollContainer then return end
+        local regions = { frame:GetRegions() }
+        for i = 1, #regions do
+            local r = regions[i]
+            if IsFontString(r) and r ~= QuestLogQuestCount and not ownRegions[r] and r:IsVisible()
+                and TextWithoutSuffix(r) == want then
+                found = r
+                return
+            end
+        end
+        if depth < 3 then
+            local kids = { frame:GetChildren() }
+            for i = 1, #kids do
+                search(kids[i], depth + 1)
+                if found then return end
+            end
+        end
+    end
+    search(map, 0)
+    return found
+end
+
+-- Adds " · 5 completed" after their count (done = nil removes it).
+local function UpdateForeignCount(fs, done)
+    if foreignCount and foreignCount ~= fs then
+        local _, base = TextWithoutSuffix(foreignCount)
+        if base ~= foreignCount:GetText() then foreignCount:SetText(base) end
+        foreignCount, foreignSuffix = nil, nil
+    end
+    if not fs then return end
+    if fs ~= foreignCount then foreignCount, foreignSuffix = fs, nil end
+    local _, base = TextWithoutSuffix(fs)
+    local suffix = done and (" \194\183 |cffffffff%d|r completed"):format(done) or nil -- \194\183 = middle dot
+    local text = suffix and (base .. suffix) or base
+    if fs:GetText() ~= text then fs:SetText(text) end
+    foreignSuffix = suffix
+end
+
 local function UpdateCompletedCount()
     if not db then return end
+    local done, total
+    if db.showCount then done, total = CountCompleted() end
+
+    local ownBox = BlizzardCountBoxInUse()
+    UpdateForeignCount((not ownBox) and FindForeignCount(QuestCountString()) or nil, done)
+
     local box, cf = QuestLogCount, QuestLogQuestCount
     local sb = QuestScrollFrame and QuestScrollFrame.SearchBox
     if not (box and cf and sb) then return end
 
-    local done, total
-    if db.showCount then done, total = CountCompleted() end
-    local show = done ~= nil and SetCountLayout(true)
-
+    local show = ownBox and done ~= nil and SetCountLayout(true)
     if not show then
         if countLine then countLine:Hide() end
         if countBaseWidth then box:SetWidth(countBaseWidth) end
-        if searchBaseWidth then sb:SetWidth(searchBaseWidth) end
-        if not db.showCount then SetCountLayout(false) end
+        if searchBaseWidth and ownBox then sb:SetWidth(searchBaseWidth) end
+        -- Put the layout back when the option is off, or when another addon
+        -- has taken over the box (only undoes our own anchor changes).
+        if not db.showCount or not ownBox then SetCountLayout(false) end
         return
     end
 
@@ -497,7 +613,7 @@ local function Refresh()
     for _, root in ipairs(GetRoots()) do
         if root:IsVisible() then Scan(root, 0, Decorate) end
     end
-    if QuestLogCount and QuestLogCount:IsVisible() then UpdateCompletedCount() end
+    if WorldMapFrame and WorldMapFrame:IsVisible() then UpdateCompletedCount() end
 end
 
 ------------------------------------------------------------------------
@@ -518,6 +634,10 @@ local function TryInstallHooks()
             UpdateCompletedCount()
         end)
         hooked.count = true
+    end
+    if not hooked.map and WorldMapFrame and WorldMapFrame.HookScript then
+        WorldMapFrame:HookScript("OnShow", function() C_Timer.After(0, Refresh) end)
+        hooked.map = true
     end
     if not hooked.show and QuestScrollFrame and QuestScrollFrame.HookScript then
         QuestScrollFrame:HookScript("OnShow", function() C_Timer.After(0, Refresh) end)
@@ -571,7 +691,7 @@ frame:SetScript("OnUpdate", function(_, elapsed)
     elapsedTotal = elapsedTotal + elapsed
     if elapsedTotal < POLL_INTERVAL then return end
     elapsedTotal = 0
-    if QuestScrollFrame and QuestScrollFrame:IsVisible() then Refresh() end
+    if WorldMapFrame and WorldMapFrame:IsVisible() then Refresh() end
 end)
 
 ------------------------------------------------------------------------
@@ -619,6 +739,8 @@ local function Debug()
         .. ", QuestScrollFrame: " .. (QuestScrollFrame and "found" or "NOT found"))
     Print("C_QuestLog.IsComplete: " .. ((C_QuestLog and C_QuestLog.IsComplete) and "found" or "NOT found")
         .. ", tag info: " .. (((C_QuestLog and C_QuestLog.GetQuestTagInfo) or GetQuestTagInfo) and "found" or "NOT found"))
+    Print("Blizzard count box in use: " .. tostring(BlizzardCountBoxInUse())
+        .. ", other addon's count: " .. (foreignCount and ("\"" .. tostring(foreignCount:GetText()) .. "\"") or "none"))
     Print("QuestLogCount: " .. (QuestLogCount and "found" or "NOT found")
         .. ", QuestLogQuestCount: " .. (QuestLogQuestCount and "found" or "NOT found")
         .. ", ShowQuestCount: " .. (type(QuestLogQuests_ShowQuestCount) == "function" and "found" or "NOT found")
@@ -750,7 +872,7 @@ local function BuildOptions(parent, top, withTitle)
         function(b) db.level = b:GetChecked() and true or false; SettingsChanged() end)
 
     Header("Quest count", 8)
-    local countBox = Button("check", "Show \"Quests completed: 5/34\" under \"Quests: 34/40\"",
+    local countBox = Button("check", "Show how many quests are completed next to the quest count",
         function(b) db.showCount = b:GetChecked() and true or false; SettingsChanged() end)
 
     -- Preview of a completed dungeon quest with the current settings

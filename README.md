@@ -11,6 +11,10 @@ The modern quest log only says "Ready for turn-in" in small text under a finishe
 - **Completed count**: "Quests completed: 5/34" under "Quests: 34/40" at the top of the quest log.
 - **Options window** with a live preview.
 
+### Works with Leatrix Maps
+
+With Leatrix Maps' "Use simple map frame", Blizzard's "Quests: 34/40" box is replaced by "17/40" in the map's title bar. The completed count is then shown there instead: "17/40 · 5 completed".
+
 ## Installation
 
 1. Download `QuestLogCompletedMarker-vX.Y.Z.zip` from the [latest release](../../releases/latest).

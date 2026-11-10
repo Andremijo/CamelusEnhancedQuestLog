@@ -1,5 +1,10 @@
 # Changelog
 
+## 1.7.0
+
+- Works with **Leatrix Maps** and its "Use simple map frame" option. Leatrix Maps hides Blizzard's "Quests: 34/40" box and shows "17/40" in its own title bar, so the completed count is now added there: "17/40 · 5 completed".
+- When another addon hides the quest count box, the quest list is no longer moved down.
+
 ## 1.6.1
 
 - The options window and the Options → AddOns page show the addon version in the bottom right corner.
