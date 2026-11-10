@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.1
+
+- The options window widens itself to fit its longest line, so no text runs outside it. The quest count option has a shorter label.
+
 ## 1.7.0
 
 - Works with **Leatrix Maps** and its "Use simple map frame" option. Leatrix Maps hides Blizzard's "Quests: 34/40" box and shows "17/40" in its own title bar, so the completed count is now added there: "17/40 · 5 completed".

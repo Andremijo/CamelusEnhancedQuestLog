@@ -812,9 +812,9 @@ local function AddLabel(button, text)
     if builtIn and builtIn ~= label then builtIn:SetText("") end
     -- Clicking the label also clicks the button.
     button:SetHitRectInsets(0, -((label:GetStringWidth() or 0) + 8), 0, 0)
+    return label
 end
 
--- Builds all controls inside `parent`. top = y offset of the first line.
 -- The version from the .toc file, e.g. "1.6.1".
 local function GetVersion()
     local getMetadata = (C_AddOns and C_AddOns.GetAddOnMetadata) or GetAddOnMetadata
@@ -822,27 +822,41 @@ local function GetVersion()
     return type(version) == "string" and version ~= "" and version or nil
 end
 
+-- Builds all controls inside `parent`. top = y offset of the first line.
+-- Returns the height used and a function that gives the width needed by
+-- the widest line, so the window can be made wide enough for every label.
 local function BuildOptions(parent, top, withTitle)
     local x, y = 16, top
+    local lines = {} -- { left = offset from the left edge, fs = FontString }
+    local function NeededWidth()
+        local widest = 0
+        for i = 1, #lines do
+            widest = math.max(widest, lines[i].left + (lines[i].fs:GetStringWidth() or 0))
+        end
+        return widest
+    end
     local function Header(text, gap)
         y = y - (gap or 0)
         local h = parent:CreateFontString(nil, "ARTWORK", "GameFontNormal")
         h:SetPoint("TOPLEFT", x, y)
         h:SetText(text)
+        lines[#lines + 1] = { left = x, fs = h }
         y = y - 20
     end
     local function Button(kind, text, onClick)
-        local b
+        local b, labelLeft
         if kind == "radio" then
             b = CreateFromTemplates("CheckButton", parent, "UIRadioButtonTemplate", "UICheckButtonTemplate")
             b:SetSize(18, 18)
             b:SetPoint("TOPLEFT", x + 7, y - 3)
+            labelLeft = x + 7 + 18 + 4
         else
             b = CreateFromTemplates("CheckButton", parent, "UICheckButtonTemplate")
             b:SetSize(26, 26)
             b:SetPoint("TOPLEFT", x + 2, y)
+            labelLeft = x + 2 + 26 + 4
         end
-        AddLabel(b, text)
+        lines[#lines + 1] = { left = labelLeft, fs = AddLabel(b, text) }
         b:SetScript("OnClick", onClick)
         y = y - 26
         return b
@@ -872,7 +886,7 @@ local function BuildOptions(parent, top, withTitle)
         function(b) db.level = b:GetChecked() and true or false; SettingsChanged() end)
 
     Header("Quest count", 8)
-    local countBox = Button("check", "Show how many quests are completed next to the quest count",
+    local countBox = Button("check", "Show how many quests are completed",
         function(b) db.showCount = b:GetChecked() and true or false; SettingsChanged() end)
 
     -- Preview of a completed dungeon quest with the current settings
@@ -920,7 +934,7 @@ local function BuildOptions(parent, top, withTitle)
     end
 
     parent:HookScript("OnShow", SyncControls)
-    return -y
+    return -y, NeededWidth
 end
 
 local function CreateOptionsWindow()
@@ -951,7 +965,11 @@ local function CreateOptionsWindow()
         close:SetPoint("TOPRIGHT", -6, -6)
         top = -18
     end
-    local height = BuildOptions(w, top, not hasTitleBar)
+    local height, neededWidth = BuildOptions(w, top, not hasTitleBar)
+    -- At least 400 wide, wider if a label needs it (16 px margin on the right).
+    local function FitWidth() w:SetWidth(math.max(400, math.ceil(neededWidth() + 16))) end
+    FitWidth()
+    w:HookScript("OnShow", FitWidth)
     w:SetHeight(height + 58) -- room for the preview row and the version line
     w:Hide()
 

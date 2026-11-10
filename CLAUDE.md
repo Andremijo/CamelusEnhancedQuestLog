@@ -27,7 +27,7 @@ World of Warcraft addon for **WoW Forever** that brings classic-style quest log 
 
 The addon was called `QuestLogCompleted` up to 1.4.0. It was renamed in 1.5.0 and warns in chat if the old folder is still installed.
 
-## Features (as of 1.7.0)
+## Features (as of 1.7.1)
 - Green check mark to the left of completed quests.
 - "(Complete)" / "(Failed)" in the tag column where "(Dungeon)" is shown. Colour is green (default) or the quest title's colour.
 - Level letter: `[26D]` for dungeon quests, `[40R]` for raid quests.
@@ -46,6 +46,7 @@ The addon was called `QuestLogCompleted` up to 1.4.0. It was renamed in 1.5.0 an
 - **Quest count layout:** `QuestLogCount` (100×20) sits to the right of `QuestScrollFrame.SearchBox`, which is anchored `BOTTOMLEFT` to the scroll frame's `TOPLEFT` at y=7. To add a line, the box and its Left/Middle/Right textures grow by `COUNT_EXTRA` (14), the scroll frame's `TOPLEFT` moves down 14, and the search box anchor moves up 14. The search box width is reapplied after every `QuestLogQuests_ShowQuestCount`, because Blizzard resets it there. Layout changes wait until combat has ended.
 - **Leatrix Maps compatibility** (source: CurseForge, GitHub mirror `austinrr/leatrix-maps-forever-mirror`). Its "Use simple map frame" hides `QuestLogCount` (Hide + alpha 0), shows its own count FontString ("17/40", a local `LeaMapsCB["MapQuestCount"]`, not reachable by name) in a title bar on `WorldMapFrame`, with the zone menus anchored to its right, and re-anchors `QuestScrollFrame` (ClearAllPoints, TOPLEFT -50) and the search box itself. So: when `QuestLogCount` is not shown or has alpha 0, the addon doesn't move anything. It finds any visible FontString on `WorldMapFrame` (skipping `ScrollContainer`) whose text is exactly "numQuests/max" and appends a suffix it can strip again. `UnshiftPoint` only undoes an anchor if it is still exactly the one we set.
 - Better Blizzard Frames does not touch the world map or quest log in WoW Forever (checked its source, `Bodify/BetterBlizzFrames`).
+- The options window measures its labels (`BuildOptions` returns a `NeededWidth` function) and is at least 400 px wide, wider if a label needs it. Don't go back to a fixed width.
 - `/qlc debug` prints the frames found and the structure of a quest row. Ask the owner for its output when something lines up wrong.
 
 ## Checking changes
