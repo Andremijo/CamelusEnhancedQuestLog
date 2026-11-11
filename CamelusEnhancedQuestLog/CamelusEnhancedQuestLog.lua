@@ -30,6 +30,7 @@ local TEXT_FAILED   = "(Failed)"
 local GREEN         = { 0.25, 1, 0.25 }  -- colour of (Complete) in "green" mode
 local CHECK_TEXTURE = "Interface\\RaidFrame\\ReadyCheck-Ready" -- green check mark
 local CHECK_SIZE    = 14
+local ADDON_ICON    = "Interface\\AddOns\\" .. ADDON_NAME .. "\\CamelusEnhancedQuestLog" -- the .tga in the addon folder
 -- Quest tag IDs -> letter after the level. 81 = Dungeon, 62/88/89 = Raid.
 local LEVEL_LETTERS = { [81] = "D", [62] = "R", [88] = "R", [89] = "R" }
 local TAG_GAP       = 6    -- minimum space between the title and (Complete)
@@ -881,8 +882,12 @@ local function BuildOptions(parent, top, withTitle)
     end
 
     if withTitle then
+        local icon = parent:CreateTexture(nil, "ARTWORK")
+        icon:SetTexture(ADDON_ICON)
+        icon:SetSize(24, 24)
+        icon:SetPoint("TOPLEFT", x, y + 4)
         local title = parent:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
-        title:SetPoint("TOPLEFT", x, y)
+        title:SetPoint("LEFT", icon, "RIGHT", 6, 0)
         title:SetText("Camelus' Enhanced Quest Log")
         y = y - 32
     end
@@ -974,6 +979,10 @@ local function CreateOptionsWindow()
     local hasTitleBar = template == "BasicFrameTemplateWithInset" and w.TitleText ~= nil
     if hasTitleBar then
         w.TitleText:SetText("Camelus' Enhanced Quest Log")
+        local icon = w:CreateTexture(nil, "OVERLAY")
+        icon:SetTexture(ADDON_ICON)
+        icon:SetSize(16, 16)
+        icon:SetPoint("RIGHT", w.TitleText, "LEFT", -4, 0)
     elseif template ~= "BasicFrameTemplateWithInset" and w.SetBackdrop then
         -- Older look if the modern window template is missing
         w:SetBackdrop({

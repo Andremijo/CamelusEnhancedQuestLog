@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.0
+
+- New addon icon (a camel with a green check mark). It shows in the game's AddOns list and next to the title in the options.
+
 ## 2.0.0
 
 - Renamed to **Camelus' Enhanced Quest Log**. The addon folder is now `CamelusEnhancedQuestLog`.

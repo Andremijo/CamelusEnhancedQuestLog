@@ -22,12 +22,13 @@ World of Warcraft addon for **WoW Forever** that brings classic-style quest log 
 ## Files
 - `CamelusEnhancedQuestLog/CamelusEnhancedQuestLog.toc`: `## Version:` is the single source of the version number.
 - `CamelusEnhancedQuestLog/CamelusEnhancedQuestLog.lua`: all the code.
+- `CamelusEnhancedQuestLog/CamelusEnhancedQuestLog.tga`: the addon icon (64×64, 32-bit TGA with alpha, uncompressed), set with `## IconTexture:` in the .toc and shown next to the options title. Regenerate it with `python3 media/make_icon.py <out_dir>` (Pillow), which also writes the README image (`media/icon.png` is its `preview_256.png`).
 - `CHANGELOG.md`: one `## x.y.z` section per release. The release workflow copies it into the release notes.
 - `.github/workflows/release.yml`: builds the zip and `release.json` and publishes the GitHub release.
 
 The addon was called `QuestLogCompleted` up to 1.4.0 and `QuestLogCompletedMarker` ("Quest Log Completed Marker") from 1.5.0 to 1.8.0. Since 2.0.0 it is **Camelus' Enhanced Quest Log**: use that exact name wherever people see it, and `CamelusEnhancedQuestLog` for folder, file and code names (no apostrophe or spaces there). It warns in chat if an old folder is still installed. The GitHub repo is still called `QuestLogCompletedMarker` until the owner renames it on GitHub.
 
-## Features (as of 2.0.0)
+## Features (as of 2.1.0)
 - Green check mark to the left of completed quests.
 - "(Complete)" / "(Failed)" in the tag column where "(Dungeon)" is shown. Colour is green (default) or the quest title's colour.
 - Level letter: `[26D]` for dungeon quests, `[40R]` for raid quests.

@@ -1,5 +1,7 @@
 # Camelus' Enhanced Quest Log
 
+<img src="media/icon.png" alt="Camelus' Enhanced Quest Log icon" width="128">
+
 A small World of Warcraft addon for **WoW Forever** (client 1.60, Interface 16001) that brings classic-style quest log markers to the modern quest log.
 
 The modern quest log only says "Ready for turn-in" in small text under a finished quest. This addon makes finished quests easy to spot:
