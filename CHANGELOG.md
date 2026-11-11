@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.8.0
+
+- New: the quest's XP after the title, e.g. "[33] Vahlarriel's Search (1,950 XP)". It is hidden for quests without XP and at max level. Turn it off in the options ("Quest title") or with `/qlc xp`.
+
 ## 1.7.1
 
 - The options window widens itself to fit its longest line, so no text runs outside it. The quest count option has a shorter label.

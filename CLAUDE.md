@@ -27,15 +27,16 @@ World of Warcraft addon for **WoW Forever** that brings classic-style quest log 
 
 The addon was called `QuestLogCompleted` up to 1.4.0. It was renamed in 1.5.0 and warns in chat if the old folder is still installed.
 
-## Features (as of 1.7.1)
+## Features (as of 1.8.0)
 - Green check mark to the left of completed quests.
 - "(Complete)" / "(Failed)" in the tag column where "(Dungeon)" is shown. Colour is green (default) or the quest title's colour.
 - Level letter: `[26D]` for dungeon quests, `[40R]` for raid quests.
+- Quest XP after the title: `(1,950 XP)`, from `GetQuestLogRewardXP(questID)` (the same call Blizzard's Forever UI uses). Not shown for 0 XP or at max level. Part of the same title pipeline as the level letter (`UpdateTitle` always rebuilds from Blizzard's text), so it is counted when long titles are wrapped.
 - "Quests completed: 5/34" under "Quests: 34/40". The box grows downwards and the list moves down.
 - With Leatrix Maps' simple map frame (which hides `QuestLogCount`): " · 5 completed" is appended to Leatrix's own "17/40" in its title bar instead.
 - Options window (`/qlc`), also under Options → AddOns, with a live preview and the version in the bottom-right corner.
-- Slash commands: `/qlc`, `/qlc help`, `both|check|text|off`, `level`, `color [green|quest]`, `count`, `debug`.
-- Saved variables `QuestLogCompletedMarkerDB`: `mode` (both/check/text/off), `level`, `color` (green/quest), `showCount`.
+- Slash commands: `/qlc`, `/qlc help`, `both|check|text|off`, `level`, `xp`, `color [green|quest]`, `count`, `debug`.
+- Saved variables `QuestLogCompletedMarkerDB`: `mode` (both/check/text/off), `level`, `color` (green/quest), `showCount`, `showXP`.
 
 ## Lessons learned (don't undo these)
 - **Taint:** never write fields on Blizzard frames. Everything the addon adds is tracked in its own weak tables (`checks`, `ourTags`, `titleState`, ...). Use `hooksecurefunc`, never replace Blizzard functions.
@@ -57,7 +58,7 @@ node -e "require('/tmp/luacheck/node_modules/luaparse').parse(require('fs').read
 ```
 Run the second command from the repo root.
 
-For logic tests, `pip install lupa` gives a real Lua 5.1 (`from lupa import lua51`). Cut a block of functions out of the .lua file, run it with small mock frames and FontStrings, and check the results. This was used for the Leatrix count suffix and the layout undo in 1.7.0.
+For logic tests, `pip install lupa` gives a real Lua 5.1 (`from lupa import lua51`). The tests in `tests/` cut a block of functions out of the .lua file, run it with small mock frames and FontStrings, and check the results. Run them all after changes (`python3 tests/test_*.py`, see `tests/README.md`) and add one for new logic.
 
 ## Releasing a new version
 1. Bump `## Version:` in the .toc and add a `## x.y.z` section at the top of `CHANGELOG.md`.
@@ -68,5 +69,5 @@ For logic tests, `pip install lupa` gives a real Lua 5.1 (`from lupa import lua5
 `release.json` (flavor `"forever"`, interface from the .toc) is what lets WoWUp install from the GitHub URL without a compatibility warning. Keep it.
 
 ## Open points
-- The quest count box, the version footer and the Leatrix Maps support (1.7.0) haven't been seen in the game yet. Ask how they look.
+- The quest count box, the version footer and the Leatrix Maps support (1.7.0) and the quest XP (1.8.0) haven't been seen in the game yet. Ask how they look.
 - The old v1.4.0 release still has the old name. Only the owner can delete it on GitHub.

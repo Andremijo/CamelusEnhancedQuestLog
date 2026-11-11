@@ -14,6 +14,7 @@
 --   /qlc text     only the (Complete) text
 --   /qlc off      neither
 --   /qlc level    toggle the D/R letter after the quest level
+--   /qlc xp       toggle the quest's XP after the title, e.g. (1,950 XP)
 --   /qlc count    toggle "Quests completed: 5/34" under "Quests: 34/40"
 --   /qlc color    toggle (Complete) colour: green or the quest's own colour
 --                 (or /qlc color green, /qlc color quest)
@@ -277,14 +278,30 @@ local function BreakFirstLine(button, fs, text, maxWidth)
     return text:sub(1, breakAt - 1) .. "\n" .. text:sub(breakAt + 1)
 end
 
-local function UpdateTitle(button, fs, letter, maxFirstLine)
+-- XP the quest gives, or nil (no XP, data not loaded yet, or max level).
+local function GetQuestXP(questID)
+    if not questID or type(GetQuestLogRewardXP) ~= "function" then return nil end
+    local level, maxLevel = SafeCall(UnitLevel, "player"), SafeCall(GetMaxPlayerLevel)
+    if type(level) == "number" and type(maxLevel) == "number" and level >= maxLevel then return nil end
+    local xp = SafeCall(GetQuestLogRewardXP, questID)
+    if type(xp) == "number" and xp > 0 then return xp end
+end
+
+-- " (1,950 XP)"
+local function XPSuffix(xp)
+    if not xp then return "" end
+    local number = (type(BreakUpLargeNumbers) == "function" and SafeCall(BreakUpLargeNumbers, xp)) or tostring(xp)
+    return " (" .. number .. " XP)"
+end
+
+local function UpdateTitle(button, fs, letter, xpSuffix, maxFirstLine)
     local text = fs:GetText()
     if not text then return end
     local st = titleState[button]
     if not st then st = {}; titleState[button] = st end
     -- If the text is what we set last time, start again from Blizzard's text.
     local base = (st.shown and text == st.shown) and st.base or text
-    local want = BreakFirstLine(button, fs, ApplyLevelLetter(base, letter), maxFirstLine)
+    local want = BreakFirstLine(button, fs, ApplyLevelLetter(base, letter) .. xpSuffix, maxFirstLine)
     st.base, st.shown = base, want
     if want ~= text then
         WithHeightFix(button, fs, function() fs:SetText(want) end)
@@ -362,7 +379,7 @@ local function Decorate(button)
     end
 
     -- Title first (it may get a line break), then place things next to it.
-    UpdateTitle(button, fs, letter, maxFirstLine)
+    UpdateTitle(button, fs, letter, db.showXP and XPSuffix(GetQuestXP(questID)) or "", maxFirstLine)
     UpdateCheck(button, fs, status == "complete" and (db.mode == "both" or db.mode == "check"))
 
     local x, y
@@ -676,6 +693,7 @@ frame:SetScript("OnEvent", function(_, event, name)
         db.check, db.text = nil, nil
         if db.level == nil then db.level = true end
         if db.showCount == nil then db.showCount = true end
+        if db.showXP == nil then db.showXP = true end
         if db.color ~= "green" and db.color ~= "quest" then db.color = "green" end
     end
     if event == "ADDON_LOADED" or event == "PLAYER_LOGIN" then
@@ -881,9 +899,11 @@ local function BuildOptions(parent, top, withTitle)
     local quest = Button("radio", "Same colour as the quest title",
         function() db.color = "quest"; SettingsChanged() end)
 
-    Header("Quest level", 8)
+    Header("Quest title", 8)
     local level = Button("check", "Add D for dungeon and R for raid quests, e.g. [26D]",
         function(b) db.level = b:GetChecked() and true or false; SettingsChanged() end)
+    local xpBox = Button("check", "Show the quest's XP after the title, e.g. (1,250 XP)",
+        function(b) db.showXP = b:GetChecked() and true or false; SettingsChanged() end)
 
     Header("Quest count", 8)
     local countBox = Button("check", "Show how many quests are completed",
@@ -912,10 +932,11 @@ local function BuildOptions(parent, top, withTitle)
         green:SetChecked(db.color == "green")
         quest:SetChecked(db.color == "quest")
         level:SetChecked(db.level)
+        xpBox:SetChecked(db.showXP)
         countBox:SetChecked(db.showCount)
 
         if ShowsCheck() then pCheck:Show() else pCheck:Hide() end
-        pTitle:SetText(db.level and "[27D] The Day After" or "[27] The Day After")
+        pTitle:SetText((db.level and "[27D] The Day After" or "[27] The Day After") .. (db.showXP and XPSuffix(1250) or ""))
         if ShowsText() then
             pTag:SetText(TEXT_COMPLETE)
             if db.color == "quest" then pTag:SetTextColor(1, 0.5, 0.25)
@@ -1036,6 +1057,8 @@ SlashCmdList.QUESTLOGCOMPLETEDMARKER = function(msg)
         db.mode = msg
     elseif msg == "level" then
         db.level = not db.level
+    elseif msg == "xp" then
+        db.showXP = not db.showXP
     elseif msg == "count" then
         db.showCount = not db.showCount
     elseif msg == "color" or msg == "colour" then
@@ -1051,12 +1074,14 @@ SlashCmdList.QUESTLOGCOMPLETEDMARKER = function(msg)
         Print("/qlc  - open the options window")
         Print("/qlc both | check | text | off  - what to show on completed quests")
         Print("/qlc level  - toggle D/R after the level, e.g. [26D]")
+        Print("/qlc xp  - toggle the quest's XP after the title, e.g. (1,950 XP)")
         Print("/qlc count  - toggle \"Quests completed\" under the quest count")
         Print("/qlc color  - (Complete) in green or in the quest's colour (/qlc color green | quest)")
         Print("/qlc debug  - troubleshooting info")
     end
     Print("showing: " .. MODE_NAMES[db.mode] .. "; level letter " ..
         (db.level and "|cff40ff40on|r" or "|cffff4040off|r") ..
+        "; XP " .. (db.showXP and "|cff40ff40on|r" or "|cffff4040off|r") ..
         "; completed count " .. (db.showCount and "|cff40ff40on|r" or "|cffff4040off|r") ..
         "; (Complete) colour: " .. (db.color == "green" and "|cff40ff40green|r" or "quest colour"))
     SettingsChanged()
