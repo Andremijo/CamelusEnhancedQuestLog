@@ -1,24 +1,24 @@
--- Quest Log Completed Marker
+-- Camelus' Enhanced Quest Log
 -- Classic-style touches for the modern quest log:
 --   * a green check mark to the left of completed quests
 --   * "(Complete)" / "(Failed)" in the tag column, where "(Dungeon)" is shown
 --   * a letter after the level: [26D] for dungeon quests, [40R] for raid quests
 --
--- Options window: /qlc  (also under Options -> AddOns in the game menu)
+-- Options window: /ceql  (also under Options -> AddOns in the game menu)
 --
 -- Slash commands:
---   /qlc          open the options window
---   /qlc help     list the commands below
---   /qlc both     check mark and (Complete) text
---   /qlc check    only the check mark
---   /qlc text     only the (Complete) text
---   /qlc off      neither
---   /qlc level    toggle the D/R letter after the quest level
---   /qlc xp       toggle the quest's XP after the title, e.g. (1,950 XP)
---   /qlc count    toggle "Quests completed: 5/34" under "Quests: 34/40"
---   /qlc color    toggle (Complete) colour: green or the quest's own colour
---                 (or /qlc color green, /qlc color quest)
---   /qlc debug    print what the addon finds (open the quest log first)
+--   /ceql          open the options window
+--   /ceql help     list the commands below
+--   /ceql both     check mark and (Complete) text
+--   /ceql check    only the check mark
+--   /ceql text     only the (Complete) text
+--   /ceql off      neither
+--   /ceql level    toggle the D/R letter after the quest level
+--   /ceql xp       toggle the quest's XP after the title, e.g. (1,950 XP)
+--   /ceql count    toggle "Quests completed: 5/34" under "Quests: 34/40"
+--   /ceql color    toggle (Complete) colour: green or the quest's own colour
+--                 (or /ceql color green, /ceql color quest)
+--   /ceql debug    print what the addon finds (open the quest log first)
 
 local ADDON_NAME = ...
 
@@ -51,7 +51,7 @@ local ownRegions = setmetatable({}, { __mode = "k" }) -- set of regions we creat
 local learnedTag -- where Blizzard puts its tag, learned from a row that has one
 
 local function Print(msg)
-    print("|cff40ff40Quest Log Completed Marker:|r " .. msg)
+    print("|cff40ff40Camelus' Enhanced Quest Log:|r " .. msg)
 end
 
 local function SafeCall(fn, ...)
@@ -681,8 +681,8 @@ frame:RegisterEvent("QUEST_LOG_UPDATE")
 frame:RegisterEvent("PLAYER_REGEN_ENABLED") -- finish layout changes that waited for combat to end
 frame:SetScript("OnEvent", function(_, event, name)
     if event == "ADDON_LOADED" and name == ADDON_NAME then
-        QuestLogCompletedMarkerDB = QuestLogCompletedMarkerDB or {}
-        db = QuestLogCompletedMarkerDB
+        CamelusEnhancedQuestLogDB = CamelusEnhancedQuestLogDB or {}
+        db = CamelusEnhancedQuestLogDB
         if not MODES[db.mode] then
             -- Settings from version 1.0 (separate check/text switches)
             if db.check == false and db.text == false then db.mode = "off"
@@ -788,7 +788,7 @@ end
 -- Options window
 ------------------------------------------------------------------------
 local updaters = {}      -- functions that make the controls match db
-local optionsWindow      -- the window /qlc opens
+local optionsWindow      -- the window /ceql opens
 local settingsCategory   -- our page under Options -> AddOns (modern menu)
 
 local function SyncControls()
@@ -883,7 +883,7 @@ local function BuildOptions(parent, top, withTitle)
     if withTitle then
         local title = parent:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
         title:SetPoint("TOPLEFT", x, y)
-        title:SetText("Quest Log Completed Marker")
+        title:SetText("Camelus' Enhanced Quest Log")
         y = y - 32
     end
 
@@ -973,7 +973,7 @@ local function CreateOptionsWindow()
     local top = -32
     local hasTitleBar = template == "BasicFrameTemplateWithInset" and w.TitleText ~= nil
     if hasTitleBar then
-        w.TitleText:SetText("Quest Log Completed Marker")
+        w.TitleText:SetText("Camelus' Enhanced Quest Log")
     elseif template ~= "BasicFrameTemplateWithInset" and w.SetBackdrop then
         -- Older look if the modern window template is missing
         w:SetBackdrop({
@@ -995,8 +995,8 @@ local function CreateOptionsWindow()
     w:Hide()
 
     -- Close with Escape
-    _G.QuestLogCompletedMarkerOptionsWindow = w
-    tinsert(UISpecialFrames, "QuestLogCompletedMarkerOptionsWindow")
+    _G.CamelusEnhancedQuestLogOptionsWindow = w
+    tinsert(UISpecialFrames, "CamelusEnhancedQuestLogOptionsWindow")
     return w
 end
 
@@ -1008,7 +1008,7 @@ end
 -- Page under Options -> AddOns (modern menu) or Interface -> AddOns (old menu)
 local function RegisterSettingsPage()
     local panel = CreateFrame("Frame")
-    panel.name = "Quest Log Completed Marker"
+    panel.name = "Camelus' Enhanced Quest Log"
     BuildOptions(panel, -16, true)
 
     local openButton = CreateFromTemplates("Button", panel, "UIPanelButtonTemplate")
@@ -1033,22 +1033,26 @@ end
 local optionsLoader = CreateFrame("Frame")
 optionsLoader:RegisterEvent("PLAYER_LOGIN")
 optionsLoader:SetScript("OnEvent", function()
-    -- The addon used to be called "QuestLogCompleted". If that old folder is
-    -- still installed, both would draw on the quest log.
+    -- The addon used to be called "QuestLogCompleted" (up to 1.4.0) and
+    -- "QuestLogCompletedMarker" (1.5.0 - 1.8.0). If an old folder is still
+    -- installed, both would draw on the quest log.
     local isLoaded = (C_AddOns and C_AddOns.IsAddOnLoaded) or IsAddOnLoaded
-    if isLoaded and isLoaded("QuestLogCompleted") then
-        Print("|cffff4040the old \"QuestLogCompleted\" addon is also installed.|r "
-            .. "Delete the Interface\\AddOns\\QuestLogCompleted folder, it has been replaced by this one.")
+    for _, oldName in ipairs({ "QuestLogCompleted", "QuestLogCompletedMarker" }) do
+        if isLoaded and isLoaded(oldName) then
+            Print("|cffff4040the old \"" .. oldName .. "\" addon is also installed.|r "
+                .. "Delete the Interface\\AddOns\\" .. oldName .. " folder, it has been replaced by this one.")
+        end
     end
     local ok, err = pcall(RegisterSettingsPage)
-    if not ok then Print("could not add the page under Options -> AddOns (" .. tostring(err) .. "). /qlc still works.") end
+    if not ok then Print("could not add the page under Options -> AddOns (" .. tostring(err) .. "). /ceql still works.") end
 end)
 
 ------------------------------------------------------------------------
 -- Slash command
 ------------------------------------------------------------------------
-SLASH_QUESTLOGCOMPLETEDMARKER1 = "/qlc"
-SlashCmdList.QUESTLOGCOMPLETEDMARKER = function(msg)
+SLASH_CAMELUSENHANCEDQUESTLOG1 = "/ceql"
+SLASH_CAMELUSENHANCEDQUESTLOG2 = "/qlc" -- the old command keeps working
+SlashCmdList.CAMELUSENHANCEDQUESTLOG = function(msg)
     msg = (msg or ""):lower():match("^%s*(.-)%s*$")
     if msg == "" or msg == "options" or msg == "config" then
         OpenOptions()
@@ -1071,13 +1075,13 @@ SlashCmdList.QUESTLOGCOMPLETEDMARKER = function(msg)
         Debug()
         return
     else
-        Print("/qlc  - open the options window")
-        Print("/qlc both | check | text | off  - what to show on completed quests")
-        Print("/qlc level  - toggle D/R after the level, e.g. [26D]")
-        Print("/qlc xp  - toggle the quest's XP after the title, e.g. (1,950 XP)")
-        Print("/qlc count  - toggle \"Quests completed\" under the quest count")
-        Print("/qlc color  - (Complete) in green or in the quest's colour (/qlc color green | quest)")
-        Print("/qlc debug  - troubleshooting info")
+        Print("/ceql  - open the options window")
+        Print("/ceql both | check | text | off  - what to show on completed quests")
+        Print("/ceql level  - toggle D/R after the level, e.g. [26D]")
+        Print("/ceql xp  - toggle the quest's XP after the title, e.g. (1,950 XP)")
+        Print("/ceql count  - toggle \"Quests completed\" under the quest count")
+        Print("/ceql color  - (Complete) in green or in the quest's colour (/ceql color green | quest)")
+        Print("/ceql debug  - troubleshooting info")
     end
     Print("showing: " .. MODE_NAMES[db.mode] .. "; level letter " ..
         (db.level and "|cff40ff40on|r" or "|cffff4040off|r") ..

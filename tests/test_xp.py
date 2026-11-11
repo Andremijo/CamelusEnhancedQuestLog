@@ -1,6 +1,6 @@
 import os
 from lupa import lua51
-src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "QuestLogCompletedMarker", "QuestLogCompletedMarker.lua"), encoding="utf-8").read()
+src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "CamelusEnhancedQuestLog", "CamelusEnhancedQuestLog.lua"), encoding="utf-8").read()
 def between(a, b):
     i = src.index(a); j = src.index(b, i); return src[i:j]
 safecall = between("local function SafeCall", "local function StripColors")

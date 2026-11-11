@@ -1,6 +1,6 @@
 import os
 from lupa import lua51
-src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "QuestLogCompletedMarker", "QuestLogCompletedMarker.lua"), encoding="utf-8").read()
+src = open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "CamelusEnhancedQuestLog", "CamelusEnhancedQuestLog.lua"), encoding="utf-8").read()
 i = src.index("local shiftedPoints = {}"); j = src.index("local function CountCompleted")
 code = src[i:j]
 L = lua51.LuaRuntime()

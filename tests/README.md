@@ -9,4 +9,4 @@ python3 tests/test_layout.py    # moving the quest list for the two-line count b
 python3 tests/test_xp.py        # "(1,950 XP)" after the quest title
 ```
 
-Each test cuts a block of functions out of `QuestLogCompletedMarker.lua` by its comments and function names. If you rename those, update the test.
+Each test cuts a block of functions out of `CamelusEnhancedQuestLog.lua` by its comments and function names. If you rename those, update the test.

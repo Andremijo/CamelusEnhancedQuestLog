@@ -1,4 +1,4 @@
-# Quest Log Completed Marker
+# Camelus' Enhanced Quest Log
 
 A small World of Warcraft addon for **WoW Forever** (client 1.60, Interface 16001) that brings classic-style quest log markers to the modern quest log.
 
@@ -18,36 +18,36 @@ With Leatrix Maps' "Use simple map frame", Blizzard's "Quests: 34/40" box is rep
 
 ## Installation
 
-1. Download `QuestLogCompletedMarker-vX.Y.Z.zip` from the [latest release](../../releases/latest).
+1. Download `CamelusEnhancedQuestLog-vX.Y.Z.zip` from the [latest release](../../releases/latest).
 2. Unzip it into your game's `Interface\AddOns\` folder, so that you have
-   `Interface\AddOns\QuestLogCompletedMarker\QuestLogCompletedMarker.toc`.
+   `Interface\AddOns\CamelusEnhancedQuestLog\CamelusEnhancedQuestLog.toc`.
 3. Restart the game or type `/reload`, and make sure the addon is enabled on the character screen.
 
 **With WoWUp:** choose **Get Addons → Install from URL** and paste `https://github.com/Andremijo/QuestLogCompletedMarker`. WoWUp then installs and updates the addon from the releases.
 
-Upgrading from the old name (`QuestLogCompleted`, version 1.4.0 and earlier)? Delete the old `Interface\AddOns\QuestLogCompleted` folder.
+Upgrading from an old name? Delete the old folder: `Interface\AddOns\QuestLogCompletedMarker` (versions 1.5.0 to 1.8.0) or `Interface\AddOns\QuestLogCompleted` (1.4.0 and earlier). The addon warns in chat if one is still installed.
 
 If the game says the addon is out of date after a client update, tick **Load out of date AddOns**.
 
 ## Options
 
-Type `/qlc` to open the options window. The same page is also under **Options → AddOns → Quest Log Completed Marker**.
+Type `/ceql` to open the options window. The same page is also under **Options → AddOns → Camelus' Enhanced Quest Log**.
 
 | Command | What it does |
 | --- | --- |
-| `/qlc` | Open the options window |
-| `/qlc both` | Show the check mark and (Complete) |
-| `/qlc check` | Show only the check mark |
-| `/qlc text` | Show only (Complete) |
-| `/qlc off` | Show neither |
-| `/qlc level` | Turn the D/R letter after the level on or off |
-| `/qlc xp` | Turn the quest's XP after the title on or off |
-| `/qlc count` | Turn "Quests completed: 5/34" under the quest count on or off |
-| `/qlc color` | Switch the (Complete) colour between green and the quest's colour (`/qlc color green`, `/qlc color quest`) |
-| `/qlc debug` | Print troubleshooting information (open the quest log first) |
-| `/qlc help` | List the commands |
+| `/ceql` | Open the options window (`/qlc` also works) |
+| `/ceql both` | Show the check mark and (Complete) |
+| `/ceql check` | Show only the check mark |
+| `/ceql text` | Show only (Complete) |
+| `/ceql off` | Show neither |
+| `/ceql level` | Turn the D/R letter after the level on or off |
+| `/ceql xp` | Turn the quest's XP after the title on or off |
+| `/ceql count` | Turn "Quests completed: 5/34" under the quest count on or off |
+| `/ceql color` | Switch the (Complete) colour between green and the quest's colour (`/ceql color green`, `/ceql color quest`) |
+| `/ceql debug` | Print troubleshooting information (open the quest log first) |
+| `/ceql help` | List the commands |
 
-Settings are saved per account in `QuestLogCompletedMarkerDB`.
+Settings are saved per account in `CamelusEnhancedQuestLogDB`.
 
 ## How it works
 
@@ -55,7 +55,7 @@ The addon doesn't replace the quest log. It finds the quest rows Blizzard draws 
 
 ## Making a new release
 
-1. Update `## Version:` in `QuestLogCompletedMarker/QuestLogCompletedMarker.toc` and add a section to `CHANGELOG.md`.
+1. Update `## Version:` in `CamelusEnhancedQuestLog/CamelusEnhancedQuestLog.toc` and add a section to `CHANGELOG.md`.
 2. Commit and push to `main`.
 3. On GitHub, open **Actions → Release → Run workflow**. (Or push a tag instead: `git tag v1.5.0 && git push origin v1.5.0`.)
 
@@ -63,7 +63,7 @@ GitHub Actions then creates the tag, builds the zip and publishes the release (`
 
 ## Reporting problems
 
-If something lines up wrong or doesn't show, open the quest log, type `/qlc debug`, and open an issue with a screenshot of the chat output.
+If something lines up wrong or doesn't show, open the quest log, type `/ceql debug`, and open an issue with a screenshot of the chat output.
 
 ## License
 

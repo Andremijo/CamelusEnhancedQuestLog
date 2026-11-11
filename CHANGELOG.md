@@ -1,5 +1,12 @@
 # Changelog
 
+## 2.0.0
+
+- Renamed to **Camelus' Enhanced Quest Log**. The addon folder is now `CamelusEnhancedQuestLog`.
+- Delete the old `QuestLogCompletedMarker` folder in `Interface\AddOns`. The addon warns in chat if it is still installed.
+- Settings start from the defaults again after the rename, because the game stores them under the folder name.
+- The options command is now `/ceql`. `/qlc` still works.
+
 ## 1.8.0
 
 - New: the quest's XP after the title, e.g. "[33] Vahlarriel's Search (1,950 XP)". It is hidden for quests without XP and at max level. Turn it off in the options ("Quest title") or with `/qlc xp`.

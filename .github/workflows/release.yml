@@ -1,9 +1,9 @@
 # Publishes a GitHub release with a ready-to-install zip.
 # Two ways to start it:
 #   * Actions tab -> Release -> "Run workflow": the version is read from
-#     "## Version:" in QuestLogCompletedMarker.toc and the tag (v1.4.0) is created.
+#     "## Version:" in CamelusEnhancedQuestLog.toc and the tag (v1.4.0) is created.
 #   * Push a version tag, e.g. `git tag v1.4.0 && git push origin v1.4.0`.
-#     The tag must match "## Version:" in QuestLogCompletedMarker.toc.
+#     The tag must match "## Version:" in CamelusEnhancedQuestLog.toc.
 name: Release
 
 on:
@@ -22,9 +22,9 @@ jobs:
 
       - name: Work out the version
         run: |
-          version=$(sed -n 's/^## Version: *//p' QuestLogCompletedMarker/QuestLogCompletedMarker.toc | tr -d '\r')
+          version=$(sed -n 's/^## Version: *//p' CamelusEnhancedQuestLog/CamelusEnhancedQuestLog.toc | tr -d '\r')
           if [ -z "$version" ]; then
-            echo "No '## Version:' line in QuestLogCompletedMarker.toc"
+            echo "No '## Version:' line in CamelusEnhancedQuestLog.toc"
             exit 1
           fi
           if [ "$GITHUB_REF_TYPE" = "tag" ] && [ "v$version" != "$GITHUB_REF_NAME" ]; then
@@ -32,11 +32,11 @@ jobs:
             exit 1
           fi
           echo "TAG=v$version" >> "$GITHUB_ENV"
-          interface=$(sed -n 's/^## Interface: *//p' QuestLogCompletedMarker/QuestLogCompletedMarker.toc | tr -d '\r' | cut -d, -f1 | tr -d ' ')
+          interface=$(sed -n 's/^## Interface: *//p' CamelusEnhancedQuestLog/CamelusEnhancedQuestLog.toc | tr -d '\r' | cut -d, -f1 | tr -d ' ')
           echo "INTERFACE=$interface" >> "$GITHUB_ENV"
 
       - name: Build the zip
-        run: zip -r "QuestLogCompletedMarker-$TAG.zip" QuestLogCompletedMarker
+        run: zip -r "CamelusEnhancedQuestLog-$TAG.zip" CamelusEnhancedQuestLog
 
       # release.json tells addon managers such as WoWUp which game client
       # the zip is for ("forever" = WoW Forever), in the same format as the
@@ -47,9 +47,9 @@ jobs:
           {
             "releases": [
               {
-                "name": "Quest Log Completed Marker",
+                "name": "Camelus' Enhanced Quest Log",
                 "version": "$TAG",
-                "filename": "QuestLogCompletedMarker-$TAG.zip",
+                "filename": "CamelusEnhancedQuestLog-$TAG.zip",
                 "nolib": false,
                 "metadata": [
                   { "flavor": "forever", "interface": $INTERFACE }
@@ -65,9 +65,9 @@ jobs:
           GH_TOKEN: ${{ github.token }}
         run: |
           cat > notes.md <<NOTES
-          Download **QuestLogCompletedMarker-$TAG.zip** below and unzip it into your game's \`Interface\\AddOns\\\` folder, so that you get \`Interface\\AddOns\\QuestLogCompletedMarker\\QuestLogCompletedMarker.toc\`. Then restart the game or type \`/reload\`.
+          Download **CamelusEnhancedQuestLog-$TAG.zip** below and unzip it into your game's \`Interface\\AddOns\\\` folder, so that you get \`Interface\\AddOns\\CamelusEnhancedQuestLog\\CamelusEnhancedQuestLog.toc\`. Then restart the game or type \`/reload\`.
 
-          Type \`/qlc\` in game to open the options. See the [README](https://github.com/$GITHUB_REPOSITORY#readme) for all features and commands.
+          Type \`/ceql\` in game to open the options. See the [README](https://github.com/$GITHUB_REPOSITORY#readme) for all features and commands.
           NOTES
           if [ -f CHANGELOG.md ]; then
             echo "" >> notes.md
@@ -78,7 +78,7 @@ jobs:
               on { print }
             ' CHANGELOG.md >> notes.md
           fi
-          gh release create "$TAG" "QuestLogCompletedMarker-$TAG.zip" release.json \
+          gh release create "$TAG" "CamelusEnhancedQuestLog-$TAG.zip" release.json \
             --target "$GITHUB_SHA" \
-            --title "Quest Log Completed Marker ${TAG#v}" \
+            --title "Camelus' Enhanced Quest Log ${TAG#v}" \
             --notes-file notes.md
