@@ -67,8 +67,9 @@ For logic tests, `pip install lupa` gives a real Lua 5.1 (`from lupa import lua5
 3. Start the **Release** workflow with `workflow_dispatch`: the GitHub tool `actions_run_trigger`, workflow `release.yml`, ref `main`. **Pushing tags from a Claude session is refused by the git proxy**, so don't try `git push origin vX.Y.Z`. The workflow creates the tag itself from the .toc version.
 4. Check the release: download `CamelusEnhancedQuestLog-vX.Y.Z.zip` and `release.json` from the release and confirm the zip contains only the `CamelusEnhancedQuestLog/` folder.
 
+To delete a release (zip and notes, the tag is kept), start the **Delete release** workflow (`delete-release.yml`) with input `tag`, e.g. `v1.4.0`. Only do this when the owner asks.
+
 `release.json` (flavor `"forever"`, interface from the .toc) is what lets WoWUp install from the GitHub URL without a compatibility warning. Keep it.
 
 ## Open points
 - The quest count box, the version footer and the Leatrix Maps support (1.7.0) and the quest XP (1.8.0) haven't been seen in the game yet. Ask how they look.
-- The old v1.4.0 release still has the old name. Only the owner can delete it on GitHub.
