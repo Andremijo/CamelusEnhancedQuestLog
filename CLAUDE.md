@@ -1,6 +1,6 @@
 # Camelus' Enhanced Quest Log: notes for Claude
 
-World of Warcraft addon for **WoW Forever** that brings classic-style quest log markers to the modern quest log. Repo: https://github.com/Andremijo/QuestLogCompletedMarker
+World of Warcraft addon for **WoW Forever** that brings classic-style quest log markers to the modern quest log. Repo: https://github.com/Andremijo/CamelusEnhancedQuestLog
 
 ## Working on this project
 - Explain changes in plain, non-technical language and say what they mean in practice.
@@ -26,7 +26,7 @@ World of Warcraft addon for **WoW Forever** that brings classic-style quest log 
 - `CHANGELOG.md`: one `## x.y.z` section per release. The release workflow copies it into the release notes.
 - `.github/workflows/release.yml`: builds the zip and `release.json` and publishes the GitHub release.
 
-The addon was called `QuestLogCompleted` up to 1.4.0 and `QuestLogCompletedMarker` ("Quest Log Completed Marker") from 1.5.0 to 1.8.0. Since 2.0.0 it is **Camelus' Enhanced Quest Log**: use that exact name wherever people see it, and `CamelusEnhancedQuestLog` for folder, file and code names (no apostrophe or spaces there). It warns in chat if an old folder is still installed. The GitHub repo is still called `QuestLogCompletedMarker` until the owner renames it on GitHub.
+The addon was called `QuestLogCompleted` up to 1.4.0 and `QuestLogCompletedMarker` ("Quest Log Completed Marker") from 1.5.0 to 1.8.0. Since 2.0.0 it is **Camelus' Enhanced Quest Log**: use that exact name wherever people see it, and `CamelusEnhancedQuestLog` for folder, file and code names (no apostrophe or spaces there). It warns in chat if an old folder is still installed. The GitHub repo was renamed from `QuestLogCompletedMarker` to `CamelusEnhancedQuestLog` after 2.1.0. GitHub forwards the old address, so older links and WoWUp installs keep working.
 
 ## Features (as of 2.1.0)
 - Green check mark to the left of completed quests.

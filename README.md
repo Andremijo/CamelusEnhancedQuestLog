@@ -25,7 +25,7 @@ With Leatrix Maps' "Use simple map frame", Blizzard's "Quests: 34/40" box is rep
    `Interface\AddOns\CamelusEnhancedQuestLog\CamelusEnhancedQuestLog.toc`.
 3. Restart the game or type `/reload`, and make sure the addon is enabled on the character screen.
 
-**With WoWUp:** choose **Get Addons → Install from URL** and paste `https://github.com/Andremijo/QuestLogCompletedMarker`. WoWUp then installs and updates the addon from the releases.
+**With WoWUp:** choose **Get Addons → Install from URL** and paste `https://github.com/Andremijo/CamelusEnhancedQuestLog`. WoWUp then installs and updates the addon from the releases.
 
 Upgrading from an old name? Delete the old folder: `Interface\AddOns\QuestLogCompletedMarker` (versions 1.5.0 to 1.8.0) or `Interface\AddOns\QuestLogCompleted` (1.4.0 and earlier). The addon warns in chat if one is still installed.
 
