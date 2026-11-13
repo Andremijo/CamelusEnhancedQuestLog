@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.2.0
+
+- New option: **Replace Blizzard's completed marker (?) with the check mark** (on by default). With "Quest Objectives" on in the quest log's settings menu, Blizzard shows a "?" in a circle on completed quests, and it covered the green check mark. Now the "?" is hidden and the check mark sits in its place. Clicking it still does what clicking the "?" did. Turn it off in the options or with `/ceql replace`.
+
 ## 2.1.0
 
 - New addon icon (a camel with a green check mark). It shows in the game's AddOns list and next to the title in the options.

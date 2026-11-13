@@ -14,6 +14,7 @@
 --   /ceql text     only the (Complete) text
 --   /ceql off      neither
 --   /ceql level    toggle the D/R letter after the quest level
+--   /ceql replace  toggle replacing Blizzard's "?" completed marker with the check mark
 --   /ceql xp       toggle the quest's XP after the title, e.g. (1,950 XP)
 --   /ceql count    toggle "Quests completed: 5/34" under "Quests: 34/40"
 --   /ceql color    toggle (Complete) colour: green or the quest's own colour
@@ -47,6 +48,7 @@ local checks     = setmetatable({}, { __mode = "k" }) -- row -> check texture
 local ourTags    = setmetatable({}, { __mode = "k" }) -- row -> our "(Complete)" FontString
 local measurers  = setmetatable({}, { __mode = "k" }) -- row -> invisible FontString for measuring
 local fadedTags  = setmetatable({}, { __mode = "k" }) -- row -> Blizzard tag we made invisible
+local fadedPOIs  = setmetatable({}, { __mode = "k" }) -- Blizzard "?" button -> questID we made it invisible for
 local titleState = setmetatable({}, { __mode = "k" }) -- row -> { base = Blizzard's text, shown = our text }
 local ownRegions = setmetatable({}, { __mode = "k" }) -- set of regions we created
 local learnedTag -- where Blizzard puts its tag, learned from a row that has one
@@ -309,7 +311,44 @@ local function UpdateTitle(button, fs, letter, xpSuffix, maxFirstLine)
     end
 end
 
-local function UpdateCheck(button, fs, show)
+------------------------------------------------------------------------
+-- Blizzard's own completed marker: the "?" in a circle at the top left of
+-- a quest row (a POI button, shown when "Quest Objectives" / the questPOI
+-- setting is on). With "replace" on, it is made invisible (alpha 0, so it
+-- still works when clicked) and the check mark takes its place.
+------------------------------------------------------------------------
+local function ShowsCheckMark() return db.mode == "both" or db.mode == "check" end
+
+-- Should Blizzard's marker for this quest be replaced by our check mark?
+local function ShouldReplacePOI(questID, status)
+    return db.replacePOI and ShowsCheckMark() and status == "complete" and questID ~= nil
+end
+
+-- The quest's "?"/"..." button in the quest log, if there is one. Only looks
+-- it up (FindButtonByQuestID), never creates one.
+local function FindPOIButton(questID)
+    local contents = QuestScrollFrame and QuestScrollFrame.Contents
+    if not (questID and contents and type(contents.FindButtonByQuestID) == "function") then return nil end
+    local ok, poi = pcall(contents.FindButtonByQuestID, contents, questID)
+    if ok and poi and poi:IsShown() then return poi end
+    return nil
+end
+
+-- Gives back every marker we hid that shouldn't be hidden any more: the
+-- option is off, the quest isn't complete, or Blizzard reused the button
+-- for another quest.
+local function RestorePOIs()
+    for poi, questID in pairs(fadedPOIs) do
+        local current = poi.GetQuestID and poi:GetQuestID()
+        if not poi:IsShown() or current ~= questID
+            or not ShouldReplacePOI(questID, QuestStatus(questID)) then
+            poi:SetAlpha(1)
+            fadedPOIs[poi] = nil
+        end
+    end
+end
+
+local function UpdateCheck(button, fs, show, poi)
     local tex = checks[button]
     if not show then
         if tex then tex:Hide() end
@@ -318,11 +357,18 @@ local function UpdateCheck(button, fs, show)
     if not tex then
         tex = button:CreateTexture(nil, "OVERLAY")
         tex:SetTexture(CHECK_TEXTURE)
-        tex:SetSize(CHECK_SIZE, CHECK_SIZE)
         checks[button] = tex
         ownRegions[tex] = true
     end
     tex:ClearAllPoints()
+    if poi then
+        -- In the place of Blizzard's "?" marker, a little bigger.
+        tex:SetSize(CHECK_SIZE + 4, CHECK_SIZE + 4)
+        tex:SetPoint("CENTER", poi, "CENTER", 0, 0)
+        tex:Show()
+        return
+    end
+    tex:SetSize(CHECK_SIZE, CHECK_SIZE)
     local textTop, fsTop = TextTop(fs), fs:GetTop()
     local dy = (textTop and fsTop) and (textTop - fsTop) or 0
     tex:SetPoint("TOPRIGHT", fs, "TOPLEFT", -3, dy + 1)
@@ -381,7 +427,12 @@ local function Decorate(button)
 
     -- Title first (it may get a line break), then place things next to it.
     UpdateTitle(button, fs, letter, db.showXP and XPSuffix(GetQuestXP(questID)) or "", maxFirstLine)
-    UpdateCheck(button, fs, status == "complete" and (db.mode == "both" or db.mode == "check"))
+    local poi = ShouldReplacePOI(questID, status) and FindPOIButton(questID) or nil
+    if poi then
+        poi:SetAlpha(0)
+        fadedPOIs[poi] = questID
+    end
+    UpdateCheck(button, fs, status == "complete" and ShowsCheckMark(), poi)
 
     local x, y
     if showTag then x, y = GetTagOffsets(button, fs, blizzTag) end
@@ -628,6 +679,7 @@ end
 
 local function Refresh()
     if not db then return end
+    RestorePOIs()
     for _, root in ipairs(GetRoots()) do
         if root:IsVisible() then Scan(root, 0, Decorate) end
     end
@@ -695,6 +747,7 @@ frame:SetScript("OnEvent", function(_, event, name)
         if db.level == nil then db.level = true end
         if db.showCount == nil then db.showCount = true end
         if db.showXP == nil then db.showXP = true end
+        if db.replacePOI == nil then db.replacePOI = true end
         if db.color ~= "green" and db.color ~= "quest" then db.color = "green" end
     end
     if event == "ADDON_LOADED" or event == "PLAYER_LOGIN" then
@@ -774,9 +827,10 @@ local function Debug()
             if tagText and not withTag then withTag = b end
             if status and not tagText and not completeNoTag then completeNoTag = b end
             if count <= 8 then
-                Print(("  #%d id=%s status=%s tag=%s letter=%s \"%s\""):format(count,
+                Print(("  #%d id=%s status=%s tag=%s letter=%s ?-marker=%s \"%s\""):format(count,
                     tostring(GetQuestID(b)), tostring(status), tostring(tagText),
-                    GetLevelLetter(GetQuestID(b), tagText), tostring(fs:GetText())))
+                    GetLevelLetter(GetQuestID(b), tagText),
+                    FindPOIButton(GetQuestID(b)) and "yes" or "no", tostring(fs:GetText())))
             end
         end)
     end
@@ -895,6 +949,8 @@ local function BuildOptions(parent, top, withTitle)
     Header("Completed quests")
     local checkBox = Button("check", "Show a check mark to the left of the title",
         function(b) SetMode(b:GetChecked() and true or false, ShowsText()) end)
+    local replaceBox = Button("check", "Replace Blizzard's completed marker (?) with the check mark",
+        function(b) db.replacePOI = b:GetChecked() and true or false; SettingsChanged() end)
     local textBox = Button("check", "Show (Complete) where (Dungeon) is shown",
         function(b) SetMode(ShowsCheck(), b:GetChecked() and true or false) end)
 
@@ -933,6 +989,8 @@ local function BuildOptions(parent, top, withTitle)
     updaters[#updaters + 1] = function()
         if not db then return end
         checkBox:SetChecked(ShowsCheck())
+        replaceBox:SetChecked(db.replacePOI)
+        if replaceBox.SetEnabled then replaceBox:SetEnabled(ShowsCheck()) end
         textBox:SetChecked(ShowsText())
         green:SetChecked(db.color == "green")
         quest:SetChecked(db.color == "quest")
@@ -1070,6 +1128,8 @@ SlashCmdList.CAMELUSENHANCEDQUESTLOG = function(msg)
         db.mode = msg
     elseif msg == "level" then
         db.level = not db.level
+    elseif msg == "replace" then
+        db.replacePOI = not db.replacePOI
     elseif msg == "xp" then
         db.showXP = not db.showXP
     elseif msg == "count" then
@@ -1087,6 +1147,7 @@ SlashCmdList.CAMELUSENHANCEDQUESTLOG = function(msg)
         Print("/ceql  - open the options window")
         Print("/ceql both | check | text | off  - what to show on completed quests")
         Print("/ceql level  - toggle D/R after the level, e.g. [26D]")
+        Print("/ceql replace  - toggle replacing Blizzard's \"?\" completed marker with the check mark")
         Print("/ceql xp  - toggle the quest's XP after the title, e.g. (1,950 XP)")
         Print("/ceql count  - toggle \"Quests completed\" under the quest count")
         Print("/ceql color  - (Complete) in green or in the quest's colour (/ceql color green | quest)")
@@ -1094,6 +1155,7 @@ SlashCmdList.CAMELUSENHANCEDQUESTLOG = function(msg)
     end
     Print("showing: " .. MODE_NAMES[db.mode] .. "; level letter " ..
         (db.level and "|cff40ff40on|r" or "|cffff4040off|r") ..
+        "; replace \"?\" " .. (db.replacePOI and "|cff40ff40on|r" or "|cffff4040off|r") ..
         "; XP " .. (db.showXP and "|cff40ff40on|r" or "|cffff4040off|r") ..
         "; completed count " .. (db.showCount and "|cff40ff40on|r" or "|cffff4040off|r") ..
         "; (Complete) colour: " .. (db.color == "green" and "|cff40ff40green|r" or "quest colour"))

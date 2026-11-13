@@ -28,16 +28,17 @@ World of Warcraft addon for **WoW Forever** that brings classic-style quest log 
 
 The addon was called `QuestLogCompleted` up to 1.4.0 and `QuestLogCompletedMarker` ("Quest Log Completed Marker") from 1.5.0 to 1.8.0. Since 2.0.0 it is **Camelus' Enhanced Quest Log**: use that exact name wherever people see it, and `CamelusEnhancedQuestLog` for folder, file and code names (no apostrophe or spaces there). It warns in chat if an old folder is still installed. The GitHub repo was renamed from `QuestLogCompletedMarker` to `CamelusEnhancedQuestLog` after 2.1.0. GitHub forwards the old address, so older links and WoWUp installs keep working.
 
-## Features (as of 2.1.0)
+## Features (as of 2.2.0)
 - Green check mark to the left of completed quests.
+- "Replace Blizzard's completed marker": Blizzard's own "?" POI button on a completed quest row (shown when the `questPOI` setting is on, anchored at the row's TOPLEFT +6,-4) gets alpha 0 and the check mark is centred on it (18 px). The button keeps working when clicked. It is found with `QuestScrollFrame.Contents:FindButtonByQuestID(questID)`, which only looks up and never acquires (`GetButtonForQuest` would create one). `RestorePOIs` runs at the start of every refresh and sets alpha back to 1 for any button that is hidden, reused for another quest, or no longer complete, or when the option or the check mark is off.
 - "(Complete)" / "(Failed)" in the tag column where "(Dungeon)" is shown. Colour is green (default) or the quest title's colour.
 - Level letter: `[26D]` for dungeon quests, `[40R]` for raid quests.
 - Quest XP after the title: `(1,950 XP)`, from `GetQuestLogRewardXP(questID)` (the same call Blizzard's Forever UI uses). Not shown for 0 XP or at max level. Part of the same title pipeline as the level letter (`UpdateTitle` always rebuilds from Blizzard's text), so it is counted when long titles are wrapped.
 - "Quests completed: 5/34" under "Quests: 34/40". The box grows downwards and the list moves down.
 - With Leatrix Maps' simple map frame (which hides `QuestLogCount`): " · 5 completed" is appended to Leatrix's own "17/40" in its title bar instead.
 - Options window (`/ceql`), also under Options → AddOns, with a live preview and the version in the bottom-right corner.
-- Slash commands (`/qlc` still works as an alias): `/ceql`, `/ceql help`, `both|check|text|off`, `level`, `xp`, `color [green|quest]`, `count`, `debug`.
-- Saved variables `CamelusEnhancedQuestLogDB`: `mode` (both/check/text/off), `level`, `color` (green/quest), `showCount`, `showXP`.
+- Slash commands (`/qlc` still works as an alias): `/ceql`, `/ceql help`, `both|check|text|off`, `replace`, `level`, `xp`, `color [green|quest]`, `count`, `debug`.
+- Saved variables `CamelusEnhancedQuestLogDB`: `mode` (both/check/text/off), `level`, `color` (green/quest), `showCount`, `showXP`, `replacePOI`.
 
 ## Lessons learned (don't undo these)
 - **Taint:** never write fields on Blizzard frames. Everything the addon adds is tracked in its own weak tables (`checks`, `ourTags`, `titleState`, ...). Use `hooksecurefunc`, never replace Blizzard functions.

@@ -8,6 +8,7 @@ The modern quest log only says "Ready for turn-in" in small text under a finishe
 
 - **Green check mark** to the left of completed quests.
 - **(Complete)** shown in the tag column, where "(Dungeon)" usually appears, like the classic quest log. Failed quests show **(Failed)**.
+- **Replaces Blizzard's "?" completed marker** with the check mark (optional).
 - **Level letter** after the quest level: `[26D]` for dungeon quests and `[40R]` for raid quests.
 - **Quest XP** after the title, e.g. `(1,950 XP)`.
 - **Colour choice** for (Complete): green (default) or the same colour as the quest title.
@@ -43,6 +44,7 @@ Type `/ceql` to open the options window. The same page is also under **Options â
 | `/ceql text` | Show only (Complete) |
 | `/ceql off` | Show neither |
 | `/ceql level` | Turn the D/R letter after the level on or off |
+| `/ceql replace` | Turn replacing Blizzard's "?" completed marker with the check mark on or off |
 | `/ceql xp` | Turn the quest's XP after the title on or off |
 | `/ceql count` | Turn "Quests completed: 5/34" under the quest count on or off |
 | `/ceql color` | Switch the (Complete) colour between green and the quest's colour (`/ceql color green`, `/ceql color quest`) |

@@ -1,7 +1,7 @@
 ## Interface: 16001
 ## Title: Camelus' Enhanced Quest Log
 ## Notes: Classic-style quest log: check mark and (Complete) on completed quests, [26D] for dungeon quests. Type /ceql for the options window.
-## Version: 2.1.0
+## Version: 2.2.0
 ## IconTexture: Interface\AddOns\CamelusEnhancedQuestLog\CamelusEnhancedQuestLog
 ## SavedVariables: CamelusEnhancedQuestLogDB
 
